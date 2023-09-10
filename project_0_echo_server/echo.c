@@ -1,4 +1,4 @@
-// NXC Data Communications Network Echo.c
+// NXC Data Communications Network echo.c
 // Written by Jongseok Park (cakeng@snu.ac.kr)
 // 2023. 9. 7
 
@@ -13,7 +13,7 @@
 #define MAX_ECHO_MSG_SIZE 1024 // Maximum size of message
 
 // A server-side function that does something with the received string.
-void server_functon (char* str)
+void server_function (char* str)
 {
     // TODO
     // Reverse the string
@@ -66,7 +66,7 @@ int server_routine (int server_port)
         printf ("Client message recieved: %s\n", echo_msg);
 
         // Do something with the received string.
-        server_functon (echo_msg);
+        server_function (echo_msg);
         printf ("Responding with: %s\n", echo_msg);
         fflush (stdout);
         

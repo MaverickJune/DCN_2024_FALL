@@ -24,9 +24,6 @@ $(TARGET): $(EXEOBJS) $(OBJS)
 $(OBJDIR)%.o: %.c $(DEPS)
 	$(CC) $(COMMON) $(CFLAGS) $(OPTS) -c $< -o $@
 
-obj/echo.o: echo.c
-	$(CC) $(COMMON) $(CFLAGS) $(OPTS) -c $< -o $@
-
 obj:
 	mkdir -p $(OBJDIR)
 
