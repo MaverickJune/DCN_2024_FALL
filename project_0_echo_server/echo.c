@@ -68,6 +68,7 @@ int server_routine (int server_port)
             printf("Client disconnected.\n");
             break; // Break out of while loop
         }
+        msg_buffer[MAX_ECHO_MSG_SIZE - 1] = '\0'; // Make sure msg_buffer is null-terminated.
         printf ("Client message recieved: %s\n", msg_buffer);
 
         // Do something with the received string.
@@ -114,8 +115,8 @@ int client_routine (char *server_ip, int server_port)
         // Read message from stdin
         printf ("Enter your message to send to server. (\"exit\" to quit): ");
         fgets (msg_buffer, MAX_ECHO_MSG_SIZE, stdin);
-        // Remove any trailing newline character from msg_buffer
-        msg_buffer[strcspn(msg_buffer, "\n")] = 0;
+        msg_buffer[strcspn(msg_buffer, "\n")] = 0; // Remove any trailing newline character from msg_buffer
+        msg_buffer[MAX_ECHO_MSG_SIZE - 1] = '\0'; // Make sure msg_buffer is null-terminated.
         // Check if user entered "exit" to quit
         if (strncmp(msg_buffer, "exit", 4) == 0)
             break; // Break out of while loop
@@ -142,6 +143,8 @@ int client_routine (char *server_ip, int server_port)
             printf("Server disconnected.\n");
             break; // Break out of while loop
         }
+        msg_buffer[MAX_ECHO_MSG_SIZE - 1] = '\0'; // Make sure msg_buffer is null-terminated.
+        
         // Print received message
         printf("Received message from server: %s\n", msg_buffer);
     }
