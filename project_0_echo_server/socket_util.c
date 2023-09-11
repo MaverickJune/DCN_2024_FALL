@@ -20,6 +20,26 @@ int client_init_and_connect_tcp_socket (char *server_ip, int server_port)
         return -1;
     }
 
+    // setsockopt() is used to set specific socket options.
+    // In this case, we are setting the option of SO_REUSEADDR to val(1) to allow the reuse of local addresses, such as ports, for different connections.
+    int val = 1;
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+    if (sock == -1)
+    {
+        printf("setsocketopt() SO_REUSEADDR error\n");
+        return -1;
+    }
+    // Disable Nagle's algorithm
+    // Nagle's algorithm is used to reduce the number of small packets sent over the network by buffering small packets and sending them together.
+    // By disabling Nagle's algorithm, we can send small packets immediately.
+    val = 1;
+    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
+    if (sock == -1)
+    {
+        printf("setsockopt() TCP_NODELAY error\n");
+        return -1;
+    }
+
     // Initialize server_addr_info to zero
     // memset() sets the sizeof(server_addr_info) bytes of memory, pointed to by &server_addr_info, to 0
     memset(&server_addr_info, 0, sizeof(server_addr_info));
@@ -73,7 +93,17 @@ int server_init_tcp_socket (int server_port)
     setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
     if (sock == -1)
     {
-        printf("socket() error\n");
+        printf("setsocketopt() SO_REUSEADDR error\n");
+        return -1;
+    }
+    // Disable Nagle's algorithm
+    // Nagle's algorithm is used to reduce the number of small packets sent over the network by buffering small packets and sending them together.
+    // By disabling Nagle's algorithm, we can send small packets immediately.
+    val = 1;
+    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
+    if (sock == -1)
+    {
+        printf("setsockopt() TCP_NODELAY error\n");
         return -1;
     }
 

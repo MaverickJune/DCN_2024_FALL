@@ -11,6 +11,7 @@
 #include "unistd.h"
 #include "sys/socket.h"
 #include "arpa/inet.h"
+#include "netinet/tcp.h"
 
 // Client side TCP socket initialization & connection function.
 int client_init_and_connect_tcp_socket (char *server_ip, int server_port);

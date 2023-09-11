@@ -18,12 +18,14 @@ void server_function (char* str)
     // TODO
     // Reverse the string
 
-    // int len = strlen(str);
-    // char temp;
-    // for (int i = 0; i < len/2; i++)
-    // {
-        
-    // }
+    int len = strlen(str);
+    char temp;
+    for (int i = 0; i < len/2; i++)
+    {
+        temp = str[i];
+        str[i] = str[len-i-1];
+        str[len-i-1] = temp;
+    }
 }
 
 // Server routine
@@ -46,13 +48,16 @@ int server_routine (int server_port)
     }
 
     // Receive message from client, do something with it, and send it back to client, forever.
-    char echo_msg[MAX_ECHO_MSG_SIZE] = {0};
+    char msg_buffer[MAX_ECHO_MSG_SIZE];
     ssize_t bytes_received = 0;
     while (1)
     {
+        // Clear msg_buffer
+        memset(msg_buffer, 0, MAX_ECHO_MSG_SIZE);
+
         // Receive message from client. 
         // read() returns -1 if error occurs, 0 if client disconnected, and number of bytes received if successful.
-        bytes_received = read(client_connected_sock, echo_msg, MAX_ECHO_MSG_SIZE);
+        bytes_received = read(client_connected_sock, msg_buffer, MAX_ECHO_MSG_SIZE);
         if (bytes_received == -1)
         {
             printf("Error: Failed to receive message from client\n");
@@ -63,22 +68,21 @@ int server_routine (int server_port)
             printf("Client disconnected.\n");
             break; // Break out of while loop
         }
-        printf ("Client message recieved: %s\n", echo_msg);
+        printf ("Client message recieved: %s\n", msg_buffer);
 
         // Do something with the received string.
-        server_function (echo_msg);
-        printf ("Responding with: %s\n", echo_msg);
+        server_function (msg_buffer);
+        printf ("Responding with: %s\n", msg_buffer);
         fflush (stdout);
         
         // Send message back to client. 
         // write() returns -1 if error occurs, and number of bytes sent if successful.
-        ssize_t bytes_sent = write(client_connected_sock, echo_msg, bytes_received);
+        ssize_t bytes_sent = write(client_connected_sock, msg_buffer, MAX_ECHO_MSG_SIZE);
         if (bytes_sent == -1)
         {
             printf("Error: Failed to send message back to client\n");
             return -1;
         }
-        
     }
 
     // Cleanup
@@ -100,22 +104,25 @@ int client_routine (char *server_ip, int server_port)
     }
 
     // Send message to server, receive message from server, and print it, forever.
-    char echo_msg[MAX_ECHO_MSG_SIZE] = {0};
+    char msg_buffer[MAX_ECHO_MSG_SIZE];
     ssize_t bytes_received = 0;
     while (1)
     {
+        // Clear msg_buffer
+        memset(msg_buffer, 0, MAX_ECHO_MSG_SIZE);
+
         // Read message from stdin
         printf ("Enter your message to send to server. (\"exit\" to quit): ");
-        fgets (echo_msg, MAX_ECHO_MSG_SIZE, stdin);
-        // Remove any trailing newline character from echo_msg
-        echo_msg[strcspn(echo_msg, "\n")] = 0;
+        fgets (msg_buffer, MAX_ECHO_MSG_SIZE, stdin);
+        // Remove any trailing newline character from msg_buffer
+        msg_buffer[strcspn(msg_buffer, "\n")] = 0;
         // Check if user entered "exit" to quit
-        if (strncmp(echo_msg, "exit", 4) == 0)
+        if (strncmp(msg_buffer, "exit", 4) == 0)
             break; // Break out of while loop
 
         // Send message to server
         // write() returns -1 if error occurs, and number of bytes sent if successful.
-        ssize_t bytes_sent = write(client_sock, echo_msg, strlen(echo_msg));
+        ssize_t bytes_sent = write(client_sock, msg_buffer, MAX_ECHO_MSG_SIZE);
         if (bytes_sent == -1)
         {
             printf("Error: Failed to send message to server\n");
@@ -124,7 +131,7 @@ int client_routine (char *server_ip, int server_port)
 
         // Receive message from server
         // read() returns -1 if error occurs, 0 if server disconnected, and number of bytes received if successful.
-        bytes_received = read(client_sock, echo_msg, MAX_ECHO_MSG_SIZE);
+        bytes_received = read(client_sock, msg_buffer, MAX_ECHO_MSG_SIZE);
         if (bytes_received == -1)
         {
             printf("Error: Failed to receive message from server\n");
@@ -136,7 +143,7 @@ int client_routine (char *server_ip, int server_port)
             break; // Break out of while loop
         }
         // Print received message
-        printf("Received message from server: %s\n", echo_msg);
+        printf("Received message from server: %s\n", msg_buffer);
     }
 
     // Cleanup
@@ -158,6 +165,7 @@ int main (int argc, char **argv)
         printf("\t\tex) %s server 127.0.0.1 12345\n", argv[0]);
         return -1;
     }
+    
     char *program_mode_str = argv[1];
     char *server_ip = argv[2];
     int server_port = atoi(argv[3]);
@@ -174,9 +182,9 @@ int main (int argc, char **argv)
 
     // Run server or client routine
     if (program_mode == SERVER_MODE)
-        server_routine (server_port);
+        return server_routine (server_port);
     else
-        client_routine (server_ip, server_port);
+        return client_routine (server_ip, server_port);
 
     return 0;
 }
