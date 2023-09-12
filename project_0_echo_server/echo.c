@@ -166,7 +166,7 @@ int main (int argc, char **argv)
         printf("\t\t<server_ip>: IP address of the server\n");
         printf("\t\t<server_port>: port number of the server\n");
         printf("\t\tex) %s server 127.0.0.1 12345\n", argv[0]);
-        return -1;
+        return 1;
     }
     
     char *program_mode_str = argv[1];
@@ -180,14 +180,20 @@ int main (int argc, char **argv)
     else
     {
         printf("Error: Invalid program_mode: %s\n", program_mode_str);
-        return -1;
+        return 1;
     }
 
+    int ret = 0;
     // Run server or client routine
     if (program_mode == SERVER_MODE)
-        return server_routine (server_port);
+        ret = server_routine (server_port);
     else
-        return client_routine (server_ip, server_port);
+        ret = client_routine (server_ip, server_port);
 
+    if (ret != 0)
+    {
+        printf("Error: Failed to run %s routine\n", program_mode_str);
+        return 1;
+    }
     return 0;
 }
