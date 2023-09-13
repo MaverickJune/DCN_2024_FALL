@@ -97,17 +97,37 @@ ssize_t read_file (void** output, char *file_path)
     if (*output == NULL)
     {
         printf("read_file() malloc() error\n");
+        fclose(fp);
         return -1;
     }
 
     if (fread(*output, 1, file_size, fp) != file_size)
     {
         printf("read_file() fread() error\n");
+        fclose(fp);
+        free (*output);
         return -1;
     }
 
     fclose(fp);
     return file_size;
+}
+
+// Get file extension from file path.
+// Returns pointer to file extension if successful, NULL if not.
+// Does not include the dot.
+// Does not allocate memory.
+char *get_file_extension (char *file_path)
+{
+    if (file_path == NULL)
+    {
+        printf("get_file_extension() NULL parameter error\n");
+        return NULL;
+    }
+    char *extension = strrchr(file_path, '.');
+    if (extension == NULL)
+        return NULL;
+    return extension + 1;
 }
 
 // Create an empty HTTP header struct
@@ -130,6 +150,7 @@ http_t *init_http ()
     http->field_count = 0;
     http->max_field_count = 16;
     http->fields = (http_field_t *) malloc(http->max_field_count * sizeof(http_field_t));
+    memset (http->fields, 0, http->max_field_count * sizeof(http_field_t));
     if (http->fields == NULL)
     {
         printf("parse_http_header() fields malloc() error\n");
@@ -250,10 +271,10 @@ void free_http (http_t *http)
     free(http->body_data);
     if (http->fields)
     {
-        for (int i = 0; i < http->field_count; i++)
+        for (int i = 0; i < http->max_field_count; i++)
         {
-                free(http->fields[i].field);
-                free(http->fields[i].val);
+            free(http->fields[i].field);
+            free(http->fields[i].val);
         }
         free (http->fields);
     }
@@ -303,6 +324,7 @@ int add_field_to_http (http_t *http, char *field, char *val)
             http->max_field_count /= 2;
             return -1;
         }
+        memset (http->fields + http->field_count, 0, http->max_field_count / 2 * sizeof(http_field_t));
     }
 
     http->fields[http->field_count].field = copy_string (field);
@@ -459,6 +481,13 @@ http_t *parse_http_header (char *request)
         }
         else if (http->path == NULL)
         {
+            // Truncate query string and fragment identifier
+            char *query_string = strchr(token, '?');
+            if (query_string != NULL)
+                *query_string = '\0';
+            char *fragment_identifier = strchr(token, '#');
+            if (fragment_identifier != NULL)
+                *fragment_identifier = '\0';
             http->path = copy_string(token);
             if (http->path == NULL)
             {
@@ -487,11 +516,8 @@ http_t *parse_http_header (char *request)
         printf("parse_http_header() first-line token error - line: %s\n", line);
         goto ERROR;
     }
-    printf ("method: %s, path: %s, version: %s\n", http->method, http->path, http->version);
-
 
     line = strtok(next_line, "\r\n");
-    printf ("line: %s\n", line);
     next_line = line + strlen(line) + 1;
     while (1)
     {
@@ -509,9 +535,7 @@ http_t *parse_http_header (char *request)
             printf("parse_http_header() add_field_to_http_response_header() error\n");
             goto ERROR;
         }
-        printf ("field: %s, val: %s\n", field, val);
         line = strtok(next_line, "\r\n");
-        printf ("line: %s\n", line);
         if (line == NULL)
             break;
         next_line = line + strlen(line) + 1;

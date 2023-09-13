@@ -48,6 +48,11 @@ ssize_t read_bytes (int sock, char *buffer, size_t size);
 // Returns the size of the file if successful, -1 if not.
 ssize_t read_file (void** output, char *file_path);
 
+// Get file extension from file path.
+// Returns pointer to file extension if successful, NULL if not.
+// Does not include the dot, and not allocate memory.
+char *get_file_extension (char *file_path);
+
 
 // Create an empty HTTP struct
 // Returns NULL if not successful.
