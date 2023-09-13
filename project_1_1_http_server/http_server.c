@@ -15,6 +15,7 @@ int server_https_1_1_routine (int client_sock);
 
 int main (int argc, char **argv)
 {
+    // Parse inputs
     if (argc != 3) 
     {
         printf ("Usage: %s <port> <http_version>\n", argv[0]);
@@ -94,7 +95,8 @@ int main (int argc, char **argv)
     }
 }
 
-
+// Server routine for HTTP/1.0.
+// Returns -1 if error occurs, 0 otherwise.
 int server_https_1_0_routine (int client_sock)
 {
     static int num = 0;
@@ -104,8 +106,8 @@ int server_https_1_0_routine (int client_sock)
 
     // Receive the HEADER of the client http message.
     // You have to consider the following cases:
-    // 1. End of message header is received (i.e. "\r\n\r\n" is received)
-    // 2. Error occurs (i.e. read() returns -1)
+    // 1. End of header indicator of http is received
+    // 2. Error occurs on read() (i.e. read() returns -1)
     // 3. Client disconnects (i.e. read() returns 0)
     // 4. MAX_HTTP_MSG_HEADER_SIZE is reached (i.e. message is too long)
     while (1)
@@ -137,31 +139,37 @@ int server_https_1_0_routine (int client_sock)
 
     printf ("Received message from client:\n%s", header_buffer);
     
-    parse_http_header (header_buffer);
-
-
+    http_t *request_header = parse_http_header (header_buffer);
+    if (request_header == NULL)
+    {
+        printf ("SERVER ERROR: Failed to parse HTTP header\n");
+        return -1;
+    }
+    printf ("http request received from client:\n");
+    print_http (request_header);
 
     num++;
 
-    http_t *response = init_http_response ("HTTP/1.0", "200 OK");
+    http_t *response;
+    
+    // Create different http response depending on the request.
+
+    
+    
+    response = init_http_with_arg (NULL, NULL, "HTTP/1.0", "200 OK");
     if (response == NULL)
     {
         printf ("SERVER ERROR: Failed to initialize HTTP response\n");
         return -1;
     }
-    if (add_field_to_http (&response, "Content-Type", "text/html") == -1)
-    {
-        printf ("SERVER ERROR: Failed to add field to HTTP response\n");
-        return -1;
-    }
-    if (add_field_to_http (&response, "date", "Tue, 12 Sep 2023 17:02:53 GMT") == -1)
+    if (add_field_to_http (response, "Content-Type", "text/html") == -1)
     {
         printf ("SERVER ERROR: Failed to add field to HTTP response\n");
         return -1;
     }
     char body[1024] = {0};
     sprintf (body, "<html><body><h1>Hello, World!</h1><p>Number of requests: %d</p></body></html>", num);
-    if (add_body_to_http (&response, sizeof(body), (void*)body) == -1)
+    if (add_body_to_http (response, sizeof(body), (void*)body) == -1)
     {
         printf ("SERVER ERROR: Failed to add body to HTTP response\n");
         return -1;

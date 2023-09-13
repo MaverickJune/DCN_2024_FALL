@@ -28,10 +28,15 @@ typedef struct http_t
     char *status;
     size_t body_size;
     void *body_data;
-    size_t field_count;
-    size_t max_field_count;
+    int field_count;
+    int max_field_count;
     http_field_t *fields;
 } http_t;
+
+
+// Alloc memory for string and copy it.
+// Returns pointer to copied string if successful, NULL if not.
+char *copy_string (char *string);
 
 // Write size bytes from buffer to sock.
 ssize_t write_bytes (int sock, char *buffer, size_t size);
@@ -39,37 +44,58 @@ ssize_t write_bytes (int sock, char *buffer, size_t size);
 // Read size bytes from sock to buffer.
 ssize_t read_bytes (int sock, char *buffer, size_t size);
 
-// Parses the header of a HTTP string.
-// Returns parsed http_t struct if successful, NULL if not.
-http_t *parse_http_header (char *request);
+// Read a file and return its contents.
+// Returns the size of the file if successful, -1 if not.
+ssize_t read_file (void** output, char *file_path);
 
-// Create an empty HTTP response message struct with version and status.
+
+// Create an empty HTTP struct
 // Returns NULL if not successful.
-http_t *init_http_response (char *version, char *status);
+http_t *init_http ();
+
+// Create an empty HTTP response message header with version and status.
+// Skips arguments if NULL.
+// Returns NULL if not successful.
+http_t *init_http_with_arg (char *method, char *path, char *version, char *status);
+
+// Deep-copy http struct.
+// Returns pointer to copied http_t struct if successful, NULL if not.
+http_t *copy_http (http_t *http);
+
+// Free http struct.
+void free_http (http_t *http);
+
+
+// Find value of field in a HTTP struct.
+// Returns pointer to value if successful, NULL if not.
+char *find_http_field_val (http_t *http, char *field);
 
 // Add a field to HTTP struct.
 // Returns 0 if successful, -1 if not.
-int add_field_to_http (http_t **http_ptr, char *field, char *val);
+int add_field_to_http (http_t *http, char *field, char *val);
+
+// Remove a field from HTTP struct.
+// Returns 0 if successful, -1 if not.
+int remove_field_from_http (http_t *http, char *field);
 
 // Add a body to HTTP struct. Includes addition of Content-Length field.
 // Skips if body_size is 0 or body_data is NULL.
 // Returns 0 if successful, -1 if not.
-int add_body_to_http (http_t **http_ptr, size_t body_size, void *body_data);
+int add_body_to_http (http_t *http, size_t body_size, void *body_data);
 
-// Find value of field in HTTP request header.
-// Returns pointer to value if successful, NULL if not.
-char *find_http_request_header_field (http_t *http, char *field);
+// Remove a body from HTTP struct.
+// Returns 0 if successful, -1 if not.
+int remove_body_from_http (http_t *http);
+
+
+// Parses the header of a HTTP string.
+// Returns parsed http_t struct if successful, NULL if not.
+http_t *parse_http_header (char *request);
 
 // Format http_t struct to buffer. Dynamically allocates memory for buffer.
 // Returns number of bytes written if successful, -1 if not.
 ssize_t write_http_to_buffer (http_t *http, void** buffer_ptr);
 
-// Deep-copy http_t struct.
-// Returns pointer to copied http_t struct if successful, NULL if not.
-http_t *copy_http (http_t *http);
-
-// Free http_t struct.
-void free_http (http_t *http);
 
 // Print http_t struct to stdout.
 void print_http (http_t *http);
