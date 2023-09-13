@@ -4,20 +4,58 @@
 
 #include "http_util.h"
 
-// Parse HTTP request message.
+// Write size bytes from buffer to sock.
+ssize_t write_bytes (int sock, char *buffer, size_t size)
+{
+    ssize_t bytes_sent = 0;
+    ssize_t bytes_remaining = size;
+    while (bytes_remaining > 0)
+    {
+        bytes_sent = write(sock, buffer, bytes_remaining);
+        if (bytes_sent == -1)
+        {
+            printf("write() error\n");
+            return -1;
+        }
+        bytes_remaining -= bytes_sent;
+        buffer += bytes_sent;
+    }
+    return size;
+}
+
+// Read size bytes from sock to buffer.
+ssize_t read_bytes (int sock, char *buffer, size_t size)
+{
+    ssize_t bytes_received = 0;
+    ssize_t bytes_remaining = size;
+    while (bytes_remaining > 0)
+    {
+        bytes_received = read(sock, buffer, bytes_remaining);
+        if (bytes_received == -1)
+        {
+            printf("read() error\n");
+            return -1;
+        }
+        bytes_remaining -= bytes_received;
+        buffer += bytes_received;
+    }
+    return size;
+}
+
+// Parses the header of a HTTP string.
 // Returns parsed http_t struct if successful, NULL if not.
-http_t *parse_http_request (char *request)
+http_t *parse_http_header (char *request)
 {
     if (request == NULL)
     {
-        printf("parse_http_request() NULL parameter error\n");
+        printf("parse_http_header() NULL parameter error\n");
         return NULL;
     }
 
     http_t *http = (http_t *) malloc(sizeof(http_t));
     if (http == NULL)
     {
-        printf("parse_http_request() malloc() error\n");
+        printf("parse_http_header() malloc() error\n");
         return NULL;
     }
 

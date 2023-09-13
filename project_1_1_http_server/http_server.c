@@ -2,29 +2,116 @@
 // Written by Jongseok Park (cakeng@snu.ac.kr)
 // 2023. 9. 11
 
-#include "socket_util.h"
 #include "http_util.h"
+#include "sys/socket.h"
+#include "arpa/inet.h"
+#include "netinet/tcp.h"
 
+#define MAX_WAITING_CONNECTIONS 100 // Maximum number of waiting connections
 #define SERVER_ROOT "./server_root"
-static int num = 0;
 
-int server_routine (int client_sock)
+int server_https_1_0_routine (int client_sock);
+int server_https_1_1_routine (int client_sock);
+
+int main (int argc, char **argv)
 {
+    if (argc != 3) 
+    {
+        printf ("Usage: %s <port> <http_version>\n", argv[0]);
+        printf ("ex) %s 62123 1.0\n", argv[0]);
+        return 1;
+    }
+    int server_port = atoi(argv[1]);
+    if (server_port <= 0 || server_port > 65535)
+    {
+        printf ("Invalid port number: %s\n", argv[1]);
+        return 1;
+    }
+    int version = 10;
+    if (strncmp (argv[2], "1.0", 3) == 0)
+        version = 10;
+    else if (strncmp (argv[2], "1.1", 3) == 0)
+        version = 11;
+    else
+    {
+        printf ("Invalid HTTP version: %s\n", argv[2]);
+        return 1;
+    }
+
+    // Initialize server socket
+    int server_listening_sock = socket(PF_INET, SOCK_STREAM, 0);
+    int val = 1;
+    setsockopt(server_listening_sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+    if (server_listening_sock == -1)
+    {
+        printf("setsocketopt() SO_REUSEADDR error\n");
+        return -1;
+    }
+
+    // Bind server socket to the given port
+    struct sockaddr_in server_addr_info;
+    memset(&server_addr_info, 0, sizeof(server_addr_info));
+    server_addr_info.sin_family = AF_INET;
+    server_addr_info.sin_port = htons(server_port);
+    server_addr_info.sin_addr.s_addr = htonl(INADDR_ANY);
+    if (bind(server_listening_sock, (struct sockaddr *)&server_addr_info, sizeof(server_addr_info)) == -1)
+    {
+        printf("bind() error\n");
+        return -1;
+    }
+
+    // Listen for incoming connections
+    if (listen(server_listening_sock, MAX_WAITING_CONNECTIONS) == -1)
+    {
+        printf("listen() error\n");
+        return -1;
+    }
+
+    // Serve incoming connections forever
+    while (1)
+    {
+        struct sockaddr_in client_addr_info;
+        socklen_t client_addr_info_len = sizeof(client_addr_info);
+        int client_connected_sock;
+
+        // Accept incoming connections
+        client_connected_sock = accept(server_listening_sock, (struct sockaddr *)&client_addr_info, &client_addr_info_len);
+        if (client_connected_sock == -1)
+        {
+            printf("Error: Failed to accept an incoming connection\n");
+            return -1;
+        }
+        printf("Client %s:%d connected\n", inet_ntoa(client_addr_info.sin_addr), ntohs(client_addr_info.sin_port));
+
+        // Serve the client
+        if (version == 10)
+            server_https_1_0_routine(client_connected_sock);
+        else if (version == 11)
+            server_https_1_1_routine(client_connected_sock);
+        
+        // Close the connection with the client
+        close(client_connected_sock);
+    }
+}
+
+
+int server_https_1_0_routine (int client_sock)
+{
+    static int num = 0;
     size_t bytes_received = 0;
-    char msg_buffer[MAX_HTTP_MSG_HEADER_SIZE] = {0};
-    char *msg_ptr = msg_buffer;
+    char header_buffer[MAX_HTTP_MSG_HEADER_SIZE] = {0};
     int header_too_long_flag = 0;
 
-    // Receive client request message header until 
+    // Receive the HEADER of the client http message.
+    // You have to consider the following cases:
     // 1. End of message header is received (i.e. "\r\n\r\n" is received)
     // 2. Error occurs (i.e. read() returns -1)
     // 3. Client disconnects (i.e. read() returns 0)
     // 4. MAX_HTTP_MSG_HEADER_SIZE is reached (i.e. message is too long)
     while (1)
     {
-        // Receive message from client. 
-        // read() returns -1 if error occurs, 0 if client disconnected, and number of bytes received if successful.
-        ssize_t num_bytes = read(client_sock, msg_ptr, MAX_HTTP_MSG_HEADER_SIZE - bytes_received);
+        // TODO: Receive the header of the client http message.
+        ssize_t num_bytes = read(client_sock, header_buffer + bytes_received, MAX_HTTP_MSG_HEADER_SIZE - bytes_received);
         if (num_bytes == -1)
         {
             printf("SERVER ERROR: read() error\n");
@@ -43,14 +130,16 @@ int server_routine (int client_sock)
         else
         {
             bytes_received += num_bytes;
-            msg_ptr += num_bytes;
-            if (bytes_received >= 4 && 
-                strncmp(msg_ptr - 4, "\r\n\r\n", 4) == 0)
+            if (bytes_received >= 4 && strncmp((header_buffer + bytes_received) - 4, "\r\n\r\n", 4) == 0)
                 break;
         }
     }
 
-    printf ("Received message from client:\n%s", msg_buffer);
+    printf ("Received message from client:\n%s", header_buffer);
+    
+    parse_http_header (header_buffer);
+
+
 
     num++;
 
@@ -103,43 +192,8 @@ int server_routine (int client_sock)
     return 0;
 }
 
-int main (int argc, char **argv)
+int server_https_1_1_routine (int client_sock)
 {
-    if (argc != 2) 
-    {
-        printf ("Usage: %s <port>\n", argv[0]);
-        printf ("ex) %s 62123\n", argv[0]);
-        return 1;
-    }
-    int server_port = atoi(argv[1]);
-    if (server_port <= 0 || server_port > 65535)
-    {
-        printf ("Invalid port number: %s\n", argv[1]);
-        return 1;
-    }
-
-    // Initialize server socket
-    int server_listening_sock = server_init_tcp_socket(server_port);
-    if (server_listening_sock == -1)
-    {
-        printf("Error: Failed to initialize server socket\n");
-        return -1;
-    }
-
-    // Serve incoming connections forever
-    while (1)
-    {
-        // Wait for incoming connections
-        int client_connected_sock = server_accept_tcp_socket(server_listening_sock);
-        if (client_connected_sock == -1)
-        {
-            printf("Error: Failed to accept incoming connection\n");
-            return -1;
-        }
-
-        // Serve the client
-        server_routine(client_connected_sock);
-        
-        close(client_connected_sock);
-    }
+    return 0;
 }
+

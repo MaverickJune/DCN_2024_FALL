@@ -33,10 +33,15 @@ typedef struct http_t
     http_field_t *fields;
 } http_t;
 
+// Write size bytes from buffer to sock.
+ssize_t write_bytes (int sock, char *buffer, size_t size);
 
-// Parse HTTP request message.
+// Read size bytes from sock to buffer.
+ssize_t read_bytes (int sock, char *buffer, size_t size);
+
+// Parses the header of a HTTP string.
 // Returns parsed http_t struct if successful, NULL if not.
-http_t *parse_http_request (char *request);
+http_t *parse_http_header (char *request);
 
 // Create an empty HTTP response message struct with version and status.
 // Returns NULL if not successful.

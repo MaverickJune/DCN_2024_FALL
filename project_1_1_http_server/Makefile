@@ -1,5 +1,5 @@
 TARGET=http_server
-OBJECTS=socket_util.o http_util.o
+OBJECTS=http_util.o
 
 CC=gcc
 
