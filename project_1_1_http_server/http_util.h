@@ -103,6 +103,6 @@ ssize_t write_http_to_buffer (http_t *http, void** buffer_ptr);
 
 
 // Print http_t struct to stdout.
-void print_http (http_t *http);
+void print_http_header (http_t *http);
 
 #endif // HTTP_UTIL_H

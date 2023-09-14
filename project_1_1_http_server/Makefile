@@ -8,9 +8,9 @@ VPATH=.
 DEPS = $(wildcard *.h)
 
 OPTS=-O0 -g
-LDFLAGS=
+LDFLAGS= -lgomp
 COMMON= 
-CFLAGS= -Wall 
+CFLAGS= -Wall -fopenmp
 
 OBJS= $(addprefix $(OBJDIR), $(OBJECTS))
 EXEOBJSA= $(addsuffix .o, $(TARGET))

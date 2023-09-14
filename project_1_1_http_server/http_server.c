@@ -9,34 +9,24 @@
 
 #define MAX_WAITING_CONNECTIONS 100 // Maximum number of waiting connections
 #define MAX_PATH_SIZE 1024 // Maximum size of path
+#define MAX_PARALLEL_CONNECTIONS 100 // Maximum number of parallel connections
 #define SERVER_ROOT "./server_root"
 
-int server_https_1_0_routine (int client_sock);
-int server_https_1_1_routine (int client_sock);
+int server_routine (int client_sock);
 
 int main (int argc, char **argv)
 {
     // Parse inputs
-    if (argc != 3) 
+    if (argc != 2) 
     {
-        printf ("Usage: %s <port> <http_version>\n", argv[0]);
-        printf ("ex) %s 62123 1.0\n", argv[0]);
+        printf ("Usage: %s <port>\n", argv[0]);
+        printf ("ex) %s 62123\n", argv[0]);
         return 1;
     }
     int server_port = atoi(argv[1]);
     if (server_port <= 0 || server_port > 65535)
     {
         printf ("Invalid port number: %s\n", argv[1]);
-        return 1;
-    }
-    int version = 10;
-    if (strncmp (argv[2], "1.0", 3) == 0)
-        version = 10;
-    else if (strncmp (argv[2], "1.1", 3) == 0)
-        version = 11;
-    else
-    {
-        printf ("Invalid HTTP version: %s\n", argv[2]);
         return 1;
     }
 
@@ -72,30 +62,28 @@ int main (int argc, char **argv)
     // Serve incoming connections forever
     while (1)
     {
-        struct sockaddr_in client_addr_info;
-        socklen_t client_addr_info_len = sizeof(client_addr_info);
-        int client_connected_sock;
-
-        // Accept incoming connections
-        client_connected_sock = accept(server_listening_sock, (struct sockaddr *)&client_addr_info, &client_addr_info_len);
-        if (client_connected_sock == -1)
+        #pragma omp parallel for num_threads(MAX_PARALLEL_CONNECTIONS)
+        for (int i = 0; i < MAX_PARALLEL_CONNECTIONS; i++)
         {
-            printf("Error: Failed to accept an incoming connection\n");
-            return -1;
+            struct sockaddr_in client_addr_info;
+            socklen_t client_addr_info_len = sizeof(client_addr_info);
+            int client_connected_sock;
+
+            #pragma omp critical
+            {
+                // Accept incoming connections
+                client_connected_sock = accept(server_listening_sock, (struct sockaddr *)&client_addr_info, &client_addr_info_len);
+            }
+            if (client_connected_sock == -1)
+                printf("Error: Failed to accept an incoming connection\n");
+
+            // Serve the client
+            server_routine (client_connected_sock);
+            
+            // Close the connection with the client
+            close(client_connected_sock);
         }
-        printf("Client %s:%d connected\n", inet_ntoa(client_addr_info.sin_addr), ntohs(client_addr_info.sin_port));
-
-        // Serve the client
-        if (version == 10)
-            server_https_1_0_routine(client_connected_sock);
-        else if (version == 11)
-            server_https_1_1_routine(client_connected_sock);
-        
-        // Close the connection with the client
-        close(client_connected_sock);
-        printf("Client %s:%d disconnected\n\n", inet_ntoa(client_addr_info.sin_addr), ntohs(client_addr_info.sin_port));
     }
-
     // Close the server socket
     close(server_listening_sock);
     return 0;
@@ -103,10 +91,10 @@ int main (int argc, char **argv)
 
 // Server routine for HTTP/1.0.
 // Returns -1 if error occurs, 0 otherwise.
-int server_https_1_0_routine (int client_sock)
+int server_routine (int client_sock)
 {
     size_t bytes_received = 0;
-    char http_version[] = "HTTP/1.0";
+    char *http_version = "HTTP/1.0";
     char header_buffer[MAX_HTTP_MSG_HEADER_SIZE] = {0};
     int header_too_large_flag = 0;
 
@@ -118,8 +106,9 @@ int server_https_1_0_routine (int client_sock)
     // 4. MAX_HTTP_MSG_HEADER_SIZE is reached (i.e. message is too long)
     while (1)
     {
-        // TODO: Receive the header of the client http message.
+        // Receive the header of the client http message.
         ssize_t num_bytes = read(client_sock, header_buffer + bytes_received, MAX_HTTP_MSG_HEADER_SIZE - bytes_received);
+        bytes_received += num_bytes;
         if (num_bytes == -1)
         {
             printf("SERVER ERROR: read() error\n");
@@ -130,17 +119,13 @@ int server_https_1_0_routine (int client_sock)
             printf("SERVER ERROR:Client disconnected\n");
             return -1;
         }
-        else if (bytes_received + num_bytes >= MAX_HTTP_MSG_HEADER_SIZE)
+        else if (bytes_received >= MAX_HTTP_MSG_HEADER_SIZE)
         {
             header_too_large_flag = 1;
             break;
         }
-        else
-        {
-            bytes_received += num_bytes;
-            if (bytes_received >= 4 && strncmp((header_buffer + bytes_received) - 4, "\r\n\r\n", 4) == 0)
-                break;
-        }
+        else if (strncmp (header_buffer + bytes_received - 4, "\r\n\r\n", 4) == 0)
+            break;
     }
 
     http_t *request = NULL, *response = NULL;
@@ -164,34 +149,15 @@ int server_https_1_0_routine (int client_sock)
     }
     else
     {
-        // printf ("Received message from client:\n%s", header_buffer);
-        
+        // Parse the header of the client http message.
         request = parse_http_header (header_buffer);
         if (request == NULL)
         {
             printf ("SERVER ERROR: Failed to parse HTTP header\n");
             return -1;
         }
-        printf ("http request received from client:\n");
-        print_http (request);
-
-        // If body exists, receive the body of the client http message.
-        if (request->body_size > 0)
-        {
-            void *body_buffer = malloc (request->body_size);
-            if (body_buffer == NULL)
-            {
-                printf ("SERVER ERROR: Failed to allocate memory for HTTP body\n");
-                return -1;
-            }
-            if (read_bytes (client_sock, body_buffer, request->body_size) == -1)
-            {
-                printf ("SERVER ERROR: Failed to read HTTP body\n");
-                return -1;
-            }
-            add_body_to_http (request, request->body_size, body_buffer);
-            free (body_buffer);
-        }
+        // printf ("\tHTTP request received from client:\n");
+        // print_http_header (request);
 
         // Case 2: GET request
         if (strncmp (request->method, "GET", 3) == 0)
@@ -227,6 +193,7 @@ int server_https_1_0_routine (int client_sock)
                     return -1;
                 }
                 add_body_to_http (response, file_size, file_buffer);
+                add_field_to_http (response, "Connection", "close");
                 free (file_buffer);
                 if (strncmp (get_file_extension (file_path), "html", 4) == 0)
                     add_field_to_http (response, "Content-Type", "text/html");
@@ -240,13 +207,29 @@ int server_https_1_0_routine (int client_sock)
                     add_field_to_http (response, "Content-Type", "application/octet-stream");
             }
         }
+        else
+        {
+            // Case 3: Other requests
+            char body[] = "<html><body><h1>400 Bad Request</h1></body></html>";
+            response = init_http_with_arg (NULL, NULL, http_version, "400");
+            if (response == NULL)
+            {
+                printf ("SERVER ERROR: Failed to create HTTP response\n");
+                return -1;
+            }
+            add_body_to_http (response, sizeof(body), body);
+            add_field_to_http (response, "Content-Type", "text/html");
+            add_field_to_http (response, "Connection", "close");
+        }
     }
 
+    // Send the response to the client.
     if (response != NULL)
     {
-        printf ("http response sent to client:\n");
-        print_http (response);
+        // printf ("\tHTTP response sent to client:\n");
+        // print_http_header (response);
 
+        // Parse http response to buffer
         void *response_buffer = NULL;
         ssize_t response_size = write_http_to_buffer (response, &response_buffer);
         if (response_size == -1)
@@ -255,6 +238,7 @@ int server_https_1_0_routine (int client_sock)
             return -1;
         }
 
+        // Send http response to client
         if (write_bytes (client_sock, response_buffer, response_size) == -1)
         {
             printf ("SERVER ERROR: Failed to send response to client\n");
@@ -267,9 +251,3 @@ int server_https_1_0_routine (int client_sock)
     free_http (response);
     return 0;
 }
-
-int server_https_1_1_routine (int client_sock)
-{
-    return 0;
-}
-
