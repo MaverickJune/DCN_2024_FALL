@@ -6,30 +6,17 @@
 #include "sys/socket.h"
 #include "arpa/inet.h"
 #include "netinet/tcp.h"
+#include "omp.h"
 
-#define MAX_WAITING_CONNECTIONS 100 // Maximum number of waiting connections
-#define MAX_PATH_SIZE 1024 // Maximum size of path
-#define MAX_PARALLEL_CONNECTIONS 100 // Maximum number of parallel connections
+#define MAX_WAITING_CONNECTIONS 10 // Maximum number of waiting connections
+#define MAX_PATH_SIZE 256 // Maximum size of path
 #define SERVER_ROOT "./server_root"
 
+int server_engine (int server_port);
 int server_routine (int client_sock);
 
-int main (int argc, char **argv)
+int server_engine (int server_port)
 {
-    // Parse inputs
-    if (argc != 2) 
-    {
-        printf ("Usage: %s <port>\n", argv[0]);
-        printf ("ex) %s 62123\n", argv[0]);
-        return 1;
-    }
-    int server_port = atoi(argv[1]);
-    if (server_port <= 0 || server_port > 65535)
-    {
-        printf ("Invalid port number: %s\n", argv[1]);
-        return 1;
-    }
-
     // Initialize server socket
     int server_listening_sock = socket(PF_INET, SOCK_STREAM, 0);
     int val = 1;
@@ -37,7 +24,7 @@ int main (int argc, char **argv)
     if (server_listening_sock == -1)
     {
         printf("setsocketopt() SO_REUSEADDR error\n");
-        return 1;
+        return -1;
     }
 
     // Bind server socket to the given port
@@ -49,40 +36,34 @@ int main (int argc, char **argv)
     if (bind(server_listening_sock, (struct sockaddr *)&server_addr_info, sizeof(server_addr_info)) == -1)
     {
         printf("bind() error\n");
-        return 1;
+        return -1;
     }
 
     // Listen for incoming connections
     if (listen(server_listening_sock, MAX_WAITING_CONNECTIONS) == -1)
     {
         printf("listen() error\n");
-        return 1;
+        return -1;
     }
 
     // Serve incoming connections forever
     while (1)
     {
-        #pragma omp parallel for num_threads(MAX_PARALLEL_CONNECTIONS)
-        for (int i = 0; i < MAX_PARALLEL_CONNECTIONS; i++)
-        {
-            struct sockaddr_in client_addr_info;
-            socklen_t client_addr_info_len = sizeof(client_addr_info);
-            int client_connected_sock;
+        struct sockaddr_in client_addr_info;
+        socklen_t client_addr_info_len = sizeof(client_addr_info);
+        int client_connected_sock;
 
-            #pragma omp critical
-            {
-                // Accept incoming connections
-                client_connected_sock = accept(server_listening_sock, (struct sockaddr *)&client_addr_info, &client_addr_info_len);
-            }
-            if (client_connected_sock == -1)
-                printf("Error: Failed to accept an incoming connection\n");
+        // Accept incoming connections
+        client_connected_sock = accept(server_listening_sock, (struct sockaddr *)&client_addr_info, &client_addr_info_len);
 
-            // Serve the client
-            server_routine (client_connected_sock);
-            
-            // Close the connection with the client
-            close(client_connected_sock);
-        }
+        if (client_connected_sock == -1)
+            printf("Error: Failed to accept an incoming connection\n");
+
+        // Serve the client
+        server_routine (client_connected_sock);
+        
+        // Close the connection with the client
+        close(client_connected_sock);
     }
     // Close the server socket
     close(server_listening_sock);
@@ -244,6 +225,7 @@ int server_routine (int client_sock)
             printf ("SERVER ERROR: Failed to send response to client\n");
             return -1;
         }
+
         free (response_buffer);
     }
 

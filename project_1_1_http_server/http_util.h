@@ -9,6 +9,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "unistd.h"
+#include "signal.h"
 
 #define MAX_HTTP_MSG_HEADER_SIZE 4096 // Maximum size of HTTP GET message
 

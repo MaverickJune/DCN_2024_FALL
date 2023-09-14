@@ -28,6 +28,7 @@ ssize_t write_bytes (int sock, char *buffer, size_t size)
 {
     ssize_t bytes_sent = 0;
     ssize_t bytes_remaining = size;
+    signal(SIGPIPE, SIG_IGN);
     while (bytes_remaining > 0)
     {
         bytes_sent = write(sock, buffer, bytes_remaining);
@@ -516,7 +517,8 @@ http_t *parse_http_header (char *request)
     }
     if (http->method == NULL || http->path == NULL || http->version == NULL)
     {
-        printf("parse_http_header() first-line token error - token: %s\n", token);
+        printf("parse_http_header() first-line error: method: %s, path: %s, version: %s\n",
+                http->method? http->method : "NULL", http->path? http->path : "NULL", http->version? http->version : "NULL");
         goto ERROR;
     }
 

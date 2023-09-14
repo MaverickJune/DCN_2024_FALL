@@ -1,5 +1,5 @@
 TARGET=http_server
-OBJECTS=http_util.o
+OBJECTS=http_util.o main.o
 
 CC=gcc
 
@@ -8,9 +8,9 @@ VPATH=.
 DEPS = $(wildcard *.h)
 
 OPTS=-O0 -g
-LDFLAGS= -lgomp
+LDFLAGS=
 COMMON= 
-CFLAGS= -Wall -fopenmp
+CFLAGS= -Wall
 
 OBJS= $(addprefix $(OBJDIR), $(OBJECTS))
 EXEOBJSA= $(addsuffix .o, $(TARGET))
