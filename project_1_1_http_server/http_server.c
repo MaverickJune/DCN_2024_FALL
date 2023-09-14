@@ -17,56 +17,32 @@ int server_routine (int client_sock);
 
 int server_engine (int server_port)
 {
-    // Initialize server socket
-    int server_listening_sock = socket(PF_INET, SOCK_STREAM, 0);
-    int val = 1;
-    setsockopt(server_listening_sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
-    if (server_listening_sock == -1)
-    {
-        printf("setsocketopt() SO_REUSEADDR error\n");
-        return -1;
-    }
+    // TODO: Initialize server socket
+    int server_listening_sock, val;
 
-    // Bind server socket to the given port
+    // TODO: Bind server socket to the given port
     struct sockaddr_in server_addr_info;
-    memset(&server_addr_info, 0, sizeof(server_addr_info));
-    server_addr_info.sin_family = AF_INET;
-    server_addr_info.sin_port = htons(server_port);
-    server_addr_info.sin_addr.s_addr = htonl(INADDR_ANY);
-    if (bind(server_listening_sock, (struct sockaddr *)&server_addr_info, sizeof(server_addr_info)) == -1)
-    {
-        printf("bind() error\n");
-        return -1;
-    }
 
-    // Listen for incoming connections
-    if (listen(server_listening_sock, MAX_WAITING_CONNECTIONS) == -1)
-    {
-        printf("listen() error\n");
-        return -1;
-    }
+    // TODO: Listen for incoming connections
 
-    // Serve incoming connections forever
+
+    // TODO: Serve incoming connections forever
     while (1)
     {
         struct sockaddr_in client_addr_info;
         socklen_t client_addr_info_len = sizeof(client_addr_info);
-        int client_connected_sock;
+        int client_connected_sock = -1;
 
-        // Accept incoming connections
-        client_connected_sock = accept(server_listening_sock, (struct sockaddr *)&client_addr_info, &client_addr_info_len);
+        // TODO: Accept incoming connections
 
-        if (client_connected_sock == -1)
-            printf("Error: Failed to accept an incoming connection\n");
-
-        // Serve the client
+        // Serve the client.
         server_routine (client_connected_sock);
         
-        // Close the connection with the client
-        close(client_connected_sock);
+        // TODO: Close the connection with the client
+
     }
-    // Close the server socket
-    close(server_listening_sock);
+    // TODO: Close the server socket
+
     return 0;
 }
 
@@ -78,8 +54,9 @@ int server_routine (int client_sock)
     char *http_version = "HTTP/1.0";
     char header_buffer[MAX_HTTP_MSG_HEADER_SIZE] = {0};
     int header_too_large_flag = 0;
+    http_t *request = NULL, *response = NULL;
 
-    // Receive the HEADER of the client http message.
+    // TODO: Receive the HEADER of the client http message.
     // You have to consider the following cases:
     // 1. End of header indicator of http is received
     // 2. Error occurs on read() (i.e. read() returns -1)
@@ -87,130 +64,29 @@ int server_routine (int client_sock)
     // 4. MAX_HTTP_MSG_HEADER_SIZE is reached (i.e. message is too long)
     while (1)
     {
-        // Receive the header of the client http message.
-        ssize_t num_bytes = read(client_sock, header_buffer + bytes_received, MAX_HTTP_MSG_HEADER_SIZE - bytes_received);
-        bytes_received += num_bytes;
-        if (num_bytes == -1)
-        {
-            printf("SERVER ERROR: read() error\n");
-            return -1;
-        }
-        else if (num_bytes == 0)
-        {
-            printf("SERVER ERROR:Client disconnected\n");
-            return -1;
-        }
-        else if (bytes_received >= MAX_HTTP_MSG_HEADER_SIZE)
-        {
-            header_too_large_flag = 1;
-            break;
-        }
-        else if (strncmp (header_buffer + bytes_received - 4, "\r\n\r\n", 4) == 0)
-            break;
+        break;
     }
 
-    http_t *request = NULL, *response = NULL;
+    // TODO: Create different http response depending on the request.
 
-    // Create different http response depending on the request.
-    // Case 1: Request Header Fields Too Large
-    // In most real-world web browsers, this error rarely occurs.
-    // However, we included this case to give you a hint on how to handle other errors.
+    // Case 1: Request Header Fields Too Large - return 431 Request Header Fields Too Large
+    // This case rarely happens, but we have included its implementation as a hint.
     if (header_too_large_flag)
     {
-        char body[] = "<html><body><h1>431 Request Header Fields Too Large</h1></body></html>";
         response = init_http_with_arg (NULL, NULL, http_version, "431");
         if (response == NULL)
         {
             printf ("SERVER ERROR: Failed to create HTTP response\n");
             return -1;
         }
+
+        char body[] = "<html><body><h1>431 Request Header Fields Too Large</h1></body></html>";
         add_body_to_http (response, sizeof(body), body);
         add_field_to_http (response, "Content-Type", "text/html");
+
+        // Make sure to send "Connection: close" field in the header. (HTTP/1.0) 
         add_field_to_http (response, "Connection", "close");
-    }
-    else
-    {
-        // Parse the header of the client http message.
-        request = parse_http_header (header_buffer);
-        if (request == NULL)
-        {
-            printf ("SERVER ERROR: Failed to parse HTTP header\n");
-            return -1;
-        }
-        // printf ("\tHTTP request received from client:\n");
-        // print_http_header (request);
 
-        // Case 2: GET request
-        if (strncmp (request->method, "GET", 3) == 0)
-        {
-            if (strncmp (request->path, "/", 2) == 0)
-                request->path = copy_string ("/index.html");
-
-            char file_path[MAX_PATH_SIZE] = {0};
-            snprintf (file_path, MAX_PATH_SIZE, "%s%s", SERVER_ROOT, request->path);
-            void *file_buffer = NULL;
-            ssize_t file_size = read_file (&file_buffer, file_path);
-            if (file_size == -1)
-            {
-                // Case 2-1: File not found
-                char body[] = "<html><body><h1>404 Not Found</h1></body></html>";
-                response = init_http_with_arg (NULL, NULL, http_version, "404");
-                if (response == NULL)
-                {
-                    printf ("SERVER ERROR: Failed to create HTTP response\n");
-                    return -1;
-                }
-                add_body_to_http (response, sizeof(body), body);
-                add_field_to_http (response, "Content-Type", "text/html");
-                add_field_to_http (response, "Connection", "close");
-            }
-            else
-            {
-                // Case 2-2: File found
-                response = init_http_with_arg (NULL, NULL, http_version, "200");
-                if (response == NULL)
-                {
-                    printf ("SERVER ERROR: Failed to create HTTP response\n");
-                    return -1;
-                }
-                add_body_to_http (response, file_size, file_buffer);
-                add_field_to_http (response, "Connection", "close");
-                free (file_buffer);
-                if (strncmp (get_file_extension (file_path), "html", 4) == 0)
-                    add_field_to_http (response, "Content-Type", "text/html");
-                else if (strncmp (get_file_extension (file_path), "jpg", 3) == 0)
-                    add_field_to_http (response, "Content-Type", "image/jpeg");
-                else if (strncmp (get_file_extension (file_path), "png", 3) == 0)
-                    add_field_to_http (response, "Content-Type", "image/png");
-                else if (strncmp (get_file_extension (file_path), "mp3", 3) == 0)
-                    add_field_to_http (response, "Content-Type", "audio/mpeg");
-                else
-                    add_field_to_http (response, "Content-Type", "application/octet-stream");
-            }
-        }
-        else
-        {
-            // Case 3: Other requests
-            char body[] = "<html><body><h1>400 Bad Request</h1></body></html>";
-            response = init_http_with_arg (NULL, NULL, http_version, "400");
-            if (response == NULL)
-            {
-                printf ("SERVER ERROR: Failed to create HTTP response\n");
-                return -1;
-            }
-            add_body_to_http (response, sizeof(body), body);
-            add_field_to_http (response, "Content-Type", "text/html");
-            add_field_to_http (response, "Connection", "close");
-        }
-    }
-
-    // Send the response to the client.
-    if (response != NULL)
-    {
-        // printf ("\tHTTP response sent to client:\n");
-        // print_http_header (response);
-
-        // Parse http response to buffer
         void *response_buffer = NULL;
         ssize_t response_size = write_http_to_buffer (response, &response_buffer);
         if (response_size == -1)
@@ -225,11 +101,17 @@ int server_routine (int client_sock)
             printf ("SERVER ERROR: Failed to send response to client\n");
             return -1;
         }
-
-        free (response_buffer);
     }
+    // TODO: Parse the header of the client http message.
 
-    free_http (request);
-    free_http (response);
+
+    // TODO: Case 2: GET request - return 200 OK or 404 Not Found
+        
+
+    // TODO: Case 3: Other requests - Return 400 Bad Request
+
+
+    // TODO: Free http structs
+
     return 0;
 }

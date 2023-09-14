@@ -10,6 +10,7 @@
 #include "string.h"
 #include "unistd.h"
 #include "signal.h"
+#include "stdint.h"
 
 #define MAX_HTTP_MSG_HEADER_SIZE 4096 // Maximum size of HTTP GET message
 
@@ -34,6 +35,8 @@ typedef struct http_t
     http_field_t *fields;
 } http_t;
 
+// Encode data to base64.
+char *base64_encode(char *data, size_t input_length) ;
 
 // Alloc memory for string and copy it.
 // Returns pointer to copied string if successful, NULL if not.

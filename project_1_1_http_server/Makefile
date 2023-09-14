@@ -1,5 +1,5 @@
 TARGET=http_server
-OBJECTS=http_util.o main.o
+OBJECTS=http_util.o main.o http_server_ans.o
 
 CC=gcc
 
@@ -10,7 +10,7 @@ DEPS = $(wildcard *.h)
 OPTS=-O0 -g
 LDFLAGS=
 COMMON= 
-CFLAGS= -Wall
+CFLAGS= -Wall -Wno-unused-variable
 
 OBJS= $(addprefix $(OBJDIR), $(OBJECTS))
 EXEOBJSA= $(addsuffix .o, $(TARGET))
@@ -18,7 +18,7 @@ EXEOBJS= $(addprefix $(OBJDIR), $(EXEOBJSA))
 
 all: obj $(TARGET) 
  
-$(TARGET): $(EXEOBJS) $(OBJS)
+$(TARGET): $(EXEOBJS) $(OBJS) 
 	$(CC) $(COMMON) $(CFLAGS) $(OPTS) $^ -o $@ $(LDFLAGS)
 
 $(OBJDIR)%.o: %.c $(DEPS)

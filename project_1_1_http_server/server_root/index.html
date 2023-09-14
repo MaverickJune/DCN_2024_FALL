@@ -3,44 +3,56 @@
 	<title>My First Web Server</title>
 	<link rel="stylesheet" type="text/css" href="public/css/style.css">
 	<link rel="stylesheet" type="text/css" href="public/css/bootstrap.css">
-    </head>
+    <script src="public/js/bootstrap.js"></script>
+	</head>
     <body>
-	<!-- Main jumbotron for a primary marketing message or call to action -->
 	<div class="jumbotron">
 	    <div class="container">
 		<h1 class="display-3">Hello World!</h1>
 		<p>
-		  This is my first web server
-		  click 'Test More' button and test plenty of requests
+		  This is my first web server!
+		  Click 'Test More' button and test plenty of requests.
 		</p>
 		<p><a href="test.html" class="btn btn-primary btn-lg" href="#" role="button">Test More ></a></p>
 	    </div>
 	</div>
 
 	<div class="container">
-	    <!-- Example row of columns -->
-	    <div class="row">
-		<div class="col-md-4">
-		    <h2>Language</h2>
-		    <p>Implemented in C</p>
-		</div>
-		<div class="col-md-4">
-		    <h2>M2608.001200</h2>
-		    <p>This is the http server project of Introduction to Data Communication Networks class</p>
-		</div>
-		<div class="col-md-4">
-		    <h2>Student ID</h2>
-		    <p>My student ID is xxxx-xxxxx</p>
-		</div>
+	    <div class="row text-center">
+			<div class="col-md-4">
+				<h2>404 Button</h2>
+				<p>
+					This button goes nowhere.
+				</p>
+				<p><a href="nowhere.html" class="btn btn-primary btn-lg" href="#" role="button">Go nowhere!</a></p>
+			</div>	
+			<div class="col-md-4">
+				<h2>Post Button</h2>
+				<p>
+					This button sends a POST request.
+				</p>
+				<form action="/" method="post">
+					<input type="submit" value="Post!" class="btn btn-primary btn-lg" href="#" role="button">
+				</form>
+			</div>	
+			<div class="col-md-4">
+				<h2>Secret Button</h2>
+				<p>
+					This button goes to a secret page!!!!
+				</p>
+				<p class="text-secondary small">
+					HINT: ID&PASSWORD are in the source code.
+				</p>
+				<p><a href="secret.html" class="btn btn-primary btn-lg" href="#" role="button">Authenticate!</a></p>
+			</div>
 	    </div>
-
 	    <hr>
-
-	    <footer>
-		<p>M2608.001200 INTRODUCTION TO DATA COMMUNICATION NETWORKS</p>
+	    <footer class="text-center">
+		<p>M2608.001200 INTRODUCTION TO DATA COMMUNICATION NETWORKS FALL 2023</p>
+		<div class="container w-25 text-center">
+			<img src="/public/images/nxclab.jpg" class="img-fluid" alt="Unable to load nxclab.jpg">
+		</div>
 	    </footer>
 	</div> <!-- /container -->
-
-	<script src="public/js/bootstrap.js"></script>
     </body>
 </html>
