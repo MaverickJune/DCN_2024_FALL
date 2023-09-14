@@ -1,4 +1,11 @@
-#include "http_util.h"
+// NXC Data Communications main.c for HTTP server
+// Written by Jongseok Park (cakeng@snu.ac.kr)
+// 2023. 9. 11
+
+
+///// DO NOT MODIFY THIS FILE!! ////
+
+#include "http_functions.h"
 
 int server_engine (int server_port);
 int server_routine (int client_sock);
@@ -22,7 +29,7 @@ int main (int argc, char **argv)
         return 1;
     }
 
-    if (server_engine_ans (server_port) == -1)
+    if (server_engine (server_port) == -1)
     {
         printf ("SERVER ERROR: Failed to run server engine\n");
         return 1;

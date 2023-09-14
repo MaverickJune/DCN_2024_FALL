@@ -1,8 +1,11 @@
-// NXC Data Communications http_util.c
+// NXC Data Communications http_util.c for HTTP server
 // Written by Jongseok Park (cakeng@snu.ac.kr)
 // 2023. 9. 11
 
-#include "http_util.h"
+
+///// DO NOT MODIFY THIS FILE!! ////
+
+#include "http_functions.h"
 
 static char encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
                                 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -567,7 +570,7 @@ http_t *parse_http_header (char *request)
         token = strtok (line, ":");
         if (token == NULL)
         {
-            printf("parse_http_header() field token error - token: %s\n", token);
+            printf("parse_http_header() field token error - token: %s\n", token? token : "NULL");
             goto ERROR;
         }
         char *field = token;
