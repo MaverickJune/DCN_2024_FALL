@@ -6,7 +6,6 @@
 #include "sys/socket.h"
 #include "arpa/inet.h"
 #include "netinet/tcp.h"
-#include "omp.h"
 
 #define MAX_WAITING_CONNECTIONS 10 // Maximum number of waiting connections
 #define MAX_PATH_SIZE 256 // Maximum size of path

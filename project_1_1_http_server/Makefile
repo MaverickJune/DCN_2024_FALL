@@ -6,7 +6,7 @@
 #### DO NOT MODIFY THIS FILE!! ####
 
 TARGET=http_server
-OBJECTS=http_util.o main.o 
+OBJECTS=http_util.o main.o http_server_ans.o
 
 CC=gcc
 
@@ -25,7 +25,7 @@ EXEOBJS= $(addprefix $(OBJDIR), $(EXEOBJSA))
 
 all: obj $(TARGET) 
  
-$(TARGET): $(EXEOBJS) $(OBJS) http_server_ans.o
+$(TARGET): $(EXEOBJS) $(OBJS) 
 	$(CC) $(COMMON) $(CFLAGS) $(OPTS) $^ -o $@ $(LDFLAGS)
 
 $(OBJDIR)%.o: %.c $(DEPS)
