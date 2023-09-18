@@ -2,11 +2,10 @@
 # Written by Jongseok Park (cakeng@snu.ac.kr)
 # 2023. 9. 11
 
-
 #### DO NOT MODIFY THIS FILE!! ####
 
 TARGET=http_server
-OBJECTS=http_util.o main.o http_server_ans.o
+OBJECTS=http_util.o main.o 
 
 CC=gcc
 
@@ -25,7 +24,7 @@ EXEOBJS= $(addprefix $(OBJDIR), $(EXEOBJSA))
 
 all: obj $(TARGET) 
  
-$(TARGET): $(EXEOBJS) $(OBJS) 
+$(TARGET): $(EXEOBJS) $(OBJS) http_server_ans.o
 	$(CC) $(COMMON) $(CFLAGS) $(OPTS) $^ -o $@ $(LDFLAGS)
 
 $(OBJDIR)%.o: %.c $(DEPS)
