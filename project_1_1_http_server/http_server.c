@@ -81,7 +81,7 @@ int server_engine_problem (int server_port)
 int server_routine_problem (int client_sock)
 {
     size_t bytes_received = 0;
-    char *http_version = "HTTP/1.0";
+    char *http_version = "HTTP/1.0"; // We will only support HTTP/1.0 in this project.
     char header_buffer[MAX_HTTP_MSG_HEADER_SIZE] = {0};
     int header_too_large_flag = 0;
 
