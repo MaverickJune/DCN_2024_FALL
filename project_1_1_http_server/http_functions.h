@@ -16,25 +16,10 @@
 #include "stdint.h"
 
 #define MAX_HTTP_MSG_HEADER_SIZE 4096 // Maximum size of HTTP GET message
+#define DEFAULT_MAX_FIELD_NUM 8 
 
 int server_engine (int server_port);
 int server_routine (int server_port);
-
-// TA implementation of server_engine.
-// Use this to check if your implementation is correct.
-int server_engine_ans (int server_port);
-
-// TA implementation of server_routine.
-// Use this to check if your implementation is correct.
-// This function will print the HTTP requests and responses,
-// but you DO NOT have to print them for your implementation.
-int server_routine_ans (int client_sock);
-
-// Your implementation of server_engine.
-int server_engine (int server_port);
-// Your implementation of server_routine.
-int server_routine (int client_sock);
-
 
 
 /// HTTP MANIPULATION ///
@@ -126,11 +111,11 @@ char *base64_encode(char *data, size_t input_length) ;
 // Returns pointer to copied string if successful, NULL if not.
 char *copy_string (char *string);
 
-// Write size bytes from buffer to sock.
-ssize_t write_bytes (int sock, char *buffer, size_t size);
+// Write size bytes from buffer to socket.
+ssize_t write_bytes (int socket, char *buffer, size_t size);
 
-// Read size bytes from sock to buffer.
-ssize_t read_bytes (int sock, char *buffer, size_t size);
+// Read size bytes from socket to buffer.
+ssize_t read_bytes (int socket, char *buffer, size_t size);
 
 // Read a file and return its contents.
 // Returns the size of the file if successful, -1 if not.

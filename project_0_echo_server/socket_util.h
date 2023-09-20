@@ -18,6 +18,6 @@ int client_init_and_connect_tcp_socket (char *server_ip, int server_port);
 // Server side TCP socket initialization function.
 int server_init_tcp_socket (int server_port);
 // Accept incoming connections on the socket
-int server_accept_tcp_socket (int sock);
+int server_accept_tcp_socket (int socket);
 
 #endif // SOCKET_UTIL_H

@@ -5,7 +5,7 @@
 #### DO NOT MODIFY THIS FILE!! ####
 
 TARGET=http_server
-OBJECTS=http_util.o main.o 
+OBJECTS=http_util.o http_engine.o 
 
 CC=gcc
 
@@ -13,7 +13,7 @@ OBJDIR=./obj/
 VPATH=.
 DEPS = $(wildcard *.h)
 
-OPTS=-O0 -g
+OPTS=-O3
 LDFLAGS=
 COMMON= 
 CFLAGS= -Wall -Wno-unused-variable
@@ -24,7 +24,7 @@ EXEOBJS= $(addprefix $(OBJDIR), $(EXEOBJSA))
 
 all: obj $(TARGET) 
  
-$(TARGET): $(EXEOBJS) $(OBJS) http_server_ans.o
+$(TARGET): $(EXEOBJS) $(OBJS)
 	$(CC) $(COMMON) $(CFLAGS) $(OPTS) $^ -o $@ $(LDFLAGS)
 
 $(OBJDIR)%.o: %.c $(DEPS)

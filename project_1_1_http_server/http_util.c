@@ -11,10 +11,10 @@
 // Returns NULL if not successful.
 http_t *init_http ()
 {
-    http_t *http = (http_t *) malloc(sizeof(http_t));
+    http_t *http = (http_t *) calloc(1, sizeof(http_t));
     if (http == NULL)
     {
-        printf("init_http_response() malloc() error\n");
+        printf("init_http_response() calloc() error\n");
         return NULL;
     }
 
@@ -25,12 +25,12 @@ http_t *init_http ()
     http->body_size = 0;
     http->body_data = NULL;
     http->field_count = 0;
-    http->max_field_count = 16;
-    http->fields = (http_field_t *) malloc(http->max_field_count * sizeof(http_field_t));
+    http->max_field_count = DEFAULT_MAX_FIELD_NUM;
+    http->fields = (http_field_t *) calloc(http->max_field_count, sizeof(http_field_t));
     memset (http->fields, 0, http->max_field_count * sizeof(http_field_t));
     if (http->fields == NULL)
     {
-        printf("parse_http_header() fields malloc() error\n");
+        printf("parse_http_header() fields calloc() error\n");
         free_http (http);
         return NULL;
     }
@@ -459,10 +459,10 @@ ssize_t write_http_to_buffer (http_t *http, void** buffer_ptr)
 
     if (*buffer_ptr != NULL)
         free(*buffer_ptr);
-    *buffer_ptr = (void *) malloc(buffer_size);
+    *buffer_ptr = (void *) calloc(1, buffer_size);
     if (*buffer_ptr == NULL)
     {
-        printf("write_http_to_buffer() buffer malloc() error\n");
+        printf("write_http_to_buffer() buffer calloc() error\n");
         return -1;
     }
     char *buffer = (char *) *buffer_ptr;
@@ -539,8 +539,12 @@ char *base64_encode(char *data, size_t input_length)
 
     size_t output_length = 4 * ((input_length + 2) / 3);
 
-    char *encoded_data = malloc(output_length);
-    if (encoded_data == NULL) return NULL;
+    char *encoded_data = calloc(1, output_length);
+    if (encoded_data == NULL)
+    {
+        printf("base64_encode() calloc() error\n");
+        return NULL;
+    }
 
     for (int i = 0, j = 0; i < input_length;) {
 
@@ -572,25 +576,25 @@ char *copy_string (char *string)
         printf("copy_string() NULL parameter error\n");
         return NULL;
     }
-    char *copy = (char *) malloc(strlen(string) + 1);
+    char *copy = (char *) calloc(strlen(string) + 1, sizeof(char));
     if (copy == NULL)
     {
-        printf("copy_string() malloc() error\n");
+        printf("copy_string() calloc() error\n");
         return NULL;
     }
     strcpy(copy, string);
     return copy;
 }
 
-// Write size bytes from buffer to sock.
-ssize_t write_bytes (int sock, char *buffer, size_t size)
+// Write size bytes from buffer to socket.
+ssize_t write_bytes (int socket, char *buffer, size_t size)
 {
     ssize_t bytes_sent = 0;
     ssize_t bytes_remaining = size;
     signal(SIGPIPE, SIG_IGN);
     while (bytes_remaining > 0)
     {
-        bytes_sent = write(sock, buffer, bytes_remaining);
+        bytes_sent = write(socket, buffer, bytes_remaining);
         if (bytes_sent == -1)
         {
             printf("write() error\n");
@@ -602,14 +606,14 @@ ssize_t write_bytes (int sock, char *buffer, size_t size)
     return size;
 }
 
-// Read size bytes from sock to buffer.
-ssize_t read_bytes (int sock, char *buffer, size_t size)
+// Read size bytes from socket to buffer.
+ssize_t read_bytes (int socket, char *buffer, size_t size)
 {
     ssize_t bytes_received = 0;
     ssize_t bytes_remaining = size;
     while (bytes_remaining > 0)
     {
-        bytes_received = read(sock, buffer, bytes_remaining);
+        bytes_received = read(socket, buffer, bytes_remaining);
         if (bytes_received == -1)
         {
             printf("read() error\n");
