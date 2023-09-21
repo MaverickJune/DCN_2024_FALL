@@ -15,12 +15,22 @@
 #include "signal.h"
 #include "stdint.h"
 
+#define red() printf("\033[0;31m")
+#define green() printf("\033[0;32m")
+#define yellow() printf("\033[0;33m")
+#define white() printf("\033[0;37m")
+#define reset() printf("\033[0m")
+
+#define ERROR_PRT(...) {fprintf(stderr, "\033[0;31m"); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\033[0m");}
+
 #define MAX_HTTP_MSG_HEADER_SIZE 4096 // Maximum size of HTTP GET message
 #define DEFAULT_MAX_FIELD_NUM 8 
 
 int server_engine (int server_port);
 int server_routine (int server_port);
 
+int server_engine_ans (int server_port);
+int server_routine_ans (int client_sock);
 
 /// HTTP MANIPULATION ///
 // Refer to http_util.c for details.
@@ -99,6 +109,9 @@ ssize_t write_http_to_buffer (http_t *http, void** buffer_ptr);
 
 /// UTILITIES ///
 // Refer to http_util.c for details.
+
+// Prints a tuple of strings with a format.
+void print_tuple_yellow (char *a, char *b, int format_len, int indent);
 
 // Print HTTP struct to stdout.
 void print_http_header (http_t *http);

@@ -116,7 +116,6 @@ int client_routine (char *server_ip, int server_port)
         printf ("Enter your message to send to server. (\"exit\" to quit): ");
         fgets (msg_buffer, MAX_ECHO_MSG_SIZE, stdin);
         msg_buffer[strcspn(msg_buffer, "\n")] = 0; // Remove any trailing newline character from msg_buffer
-        msg_buffer[MAX_ECHO_MSG_SIZE - 1] = '\0'; // Make sure msg_buffer is null-terminated.
         // Check if user entered "exit" to quit
         if (strncmp(msg_buffer, "exit", 4) == 0)
             break; // Break out of while loop

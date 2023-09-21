@@ -5,7 +5,7 @@
 #### DO NOT MODIFY THIS FILE!! ####
 
 TARGET=http_server
-OBJECTS=http_util.o http_engine.o 
+OBJECTS=http_util.o http_engine.o http_engine_ans.o
 
 CC=gcc
 

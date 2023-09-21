@@ -1,4 +1,4 @@
-// NXC Data Communications http_server.c
+// NXC Data Communications http_engine.c for HTTP server
 // Written by Jongseok Park (cakeng@snu.ac.kr)
 // 2023. 9. 11
 
@@ -14,12 +14,12 @@
 int server_engine_ans (int server_port)
 {
     // Initialize server socket
-    int server_listening_sock = sock(PF_INET, SOCK_STREAM, 0);
+    int server_listening_sock = socket(PF_INET, SOCK_STREAM, 0);
     int val = 1;
     setsockopt(server_listening_sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
     if (server_listening_sock == -1)
     {
-        printf("setsocketopt() SO_REUSEADDR error\n");
+        ERROR_PRT ("SERVER ERROR: setsocketopt() SO_REUSEADDR error\n");
         return -1;
     }
 
@@ -31,14 +31,14 @@ int server_engine_ans (int server_port)
     server_addr_info.sin_addr.s_addr = htonl(INADDR_ANY);
     if (bind(server_listening_sock, (struct sockaddr *)&server_addr_info, sizeof(server_addr_info)) == -1)
     {
-        printf("bind() error\n");
+        ERROR_PRT ("SERVER ERROR: bind() error\n");
         return -1;
     }
 
     // Listen for incoming connections
     if (listen(server_listening_sock, MAX_WAITING_CONNECTIONS) == -1)
     {
-        printf("listen() error\n");
+        ERROR_PRT ("SERVER ERROR: listen() error\n");
         return -1;
     }
 
@@ -51,15 +51,30 @@ int server_engine_ans (int server_port)
 
         // Accept incoming connections
         client_connected_sock = accept(server_listening_sock, (struct sockaddr *)&client_addr_info, &client_addr_info_len);
+        // green();
+        printf ("CLIENT ");
+        reset();
+        printf("%s:%d ", inet_ntoa(client_addr_info.sin_addr), ntohs(client_addr_info.sin_port));
+        green();
+        printf ("CONNECTED.\n");
+        reset();
 
         if (client_connected_sock == -1)
-            printf("Error: Failed to accept an incoming connection\n");
+            ERROR_PRT ("SERVER ERROR: Failed to accept an incoming connection\n");
 
         // Serve the client
-        server_routine (client_connected_sock);
+        server_routine_ans (client_connected_sock);
         
         // Close the connection with the client
         close(client_connected_sock);
+        // green();
+        printf ("CLIENT ");
+        reset();
+        printf ("%s:%d ", inet_ntoa(client_addr_info.sin_addr), ntohs(client_addr_info.sin_port));
+        green();
+        printf ("DISCONNECTED.\n\n");
+        reset();
+        fflush (stdout);
     }
     // Close the server socket
     close(server_listening_sock);
@@ -88,12 +103,12 @@ int server_routine_ans (int client_sock)
         bytes_received += num_bytes;
         if (num_bytes == -1)
         {
-            printf("SERVER ERROR: read() error\n");
+            ERROR_PRT ("SERVER ERROR: read() error\n");
             return -1;
         }
         else if (num_bytes == 0)
         {
-            printf("SERVER ERROR:Client disconnected\n");
+            ERROR_PRT ("SERVER ERROR:Client disconnected\n");
             return -1;
         }
         else if (bytes_received >= MAX_HTTP_MSG_HEADER_SIZE)
@@ -117,7 +132,7 @@ int server_routine_ans (int client_sock)
         response = init_http_with_arg (NULL, NULL, http_version, "431");
         if (response == NULL)
         {
-            printf ("SERVER ERROR: Failed to create HTTP response\n");
+            ERROR_PRT ("SERVER ERROR: Failed to create HTTP response\n");
             return -1;
         }
         add_body_to_http (response, sizeof(body), body);
@@ -130,10 +145,13 @@ int server_routine_ans (int client_sock)
         request = parse_http_header (header_buffer);
         if (request == NULL)
         {
-            printf ("SERVER ERROR: Failed to parse HTTP header\n");
+            ERROR_PRT ("SERVER ERROR: Failed to parse HTTP header\n");
             return -1;
         }
-        printf ("\tHTTP request received from client:\n");
+        printf ("\tHTTP ");
+        green();
+        printf ("REQUEST:\n");
+        reset();
         print_http_header (request);
 
         // Case 2: GET request
@@ -192,7 +210,7 @@ int server_routine_ans (int client_sock)
                     response = init_http_with_arg (NULL, NULL, http_version, "404");
                     if (response == NULL)
                     {
-                        printf ("SERVER ERROR: Failed to create HTTP response\n");
+                        ERROR_PRT ("SERVER ERROR: Failed to create HTTP response\n");
                         return -1;
                     }
                     add_body_to_http (response, sizeof(body), body);
@@ -206,7 +224,7 @@ int server_routine_ans (int client_sock)
                     response = init_http_with_arg (NULL, NULL, http_version, "200");
                     if (response == NULL)
                     {
-                        printf ("SERVER ERROR: Failed to create HTTP response\n");
+                        ERROR_PRT ("SERVER ERROR: Failed to create HTTP response\n");
                         return -1;
                     }
                     add_body_to_http (response, file_size, file_buffer);
@@ -232,7 +250,7 @@ int server_routine_ans (int client_sock)
                 response = init_http_with_arg (NULL, NULL, http_version, "401");
                 if (response == NULL)
                 {
-                    printf ("SERVER ERROR: Failed to create HTTP response\n");
+                    ERROR_PRT ("SERVER ERROR: Failed to create HTTP response\n");
                     return -1;
                 }
                 add_body_to_http (response, sizeof(body), body);
@@ -248,7 +266,7 @@ int server_routine_ans (int client_sock)
             response = init_http_with_arg (NULL, NULL, http_version, "400");
             if (response == NULL)
             {
-                printf ("SERVER ERROR: Failed to create HTTP response\n");
+                ERROR_PRT ("SERVER ERROR: Failed to create HTTP response\n");
                 return -1;
             }
             add_body_to_http (response, sizeof(body), body);
@@ -260,7 +278,10 @@ int server_routine_ans (int client_sock)
     // Send the response to the client.
     if (response != NULL)
     {
-        printf ("\tHTTP response sent to client:\n");
+        printf ("\tHTTP ");
+        green();
+        printf ("RESPONSE:\n");
+        reset();
         print_http_header (response);
 
         // Parse http response to buffer
@@ -268,14 +289,14 @@ int server_routine_ans (int client_sock)
         ssize_t response_size = write_http_to_buffer (response, &response_buffer);
         if (response_size == -1)
         {
-            printf ("SERVER ERROR: Failed to write HTTP response to buffer\n");
+            ERROR_PRT ("SERVER ERROR: Failed to write HTTP response to buffer\n");
             return -1;
         }
 
         // Send http response to client
         if (write_bytes (client_sock, response_buffer, response_size) == -1)
         {
-            printf ("SERVER ERROR: Failed to send response to client\n");
+            ERROR_PRT ("SERVER ERROR: Failed to send response to client\n");
             return -1;
         }
 
