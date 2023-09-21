@@ -13,7 +13,7 @@ OBJDIR=./obj/
 VPATH=.
 DEPS = $(wildcard *.h)
 
-OPTS=-O3
+OPTS=-O0 -g
 LDFLAGS=
 COMMON= 
 CFLAGS= -Wall -Wno-unused-variable

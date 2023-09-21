@@ -1,0 +1,102 @@
+<!-- NXC Data Communications index.html for HTTP server -->
+<!-- Written by Jongseok Park (cakeng@snu.ac.kr) -->
+<!-- 2023. 9. 11 -->
+
+
+<!-- DO NOT MODIFY THIS FILE!!  -->
+
+<html>
+    <head>
+	<title>NXC WEB ALBUM</title>
+	<link rel="stylesheet" type="text/css" href="public/css/style.css">
+	<link rel="stylesheet" type="text/css" href="public/css/bootstrap.css">
+	<script src="public/js/jquery.js"></script>
+	<script src="public/js/bootstrap.js"></script>
+	</head>
+    <body>
+	<div class="jumbotron">
+	    <div class="container">
+		<h1 class="display-3">Hello World!</h1>
+		<p>
+		  This is the NXC web album!
+		  Click the button to view images.
+		</p>
+		<p><a href="album.html" class="btn btn-primary btn-lg" href="#" role="button">View Album!</a></p>
+	    </div>
+	</div>
+
+	<div class="container">
+	    <div class="row text-center">
+			<div class="col-md-4">
+				<h2>POST Image</h2>
+				<p>
+					Use this to upload images to the album.
+				</p>
+				<p class="text-secondary small">
+					Accepts .jpg files.
+				</p>
+				<div class="custom-file w-75">
+					<input type="file" class="custom-file-input" id="customFile">
+					<label class="custom-file-label text-left" for="customFile">Choose file...</label>
+				</div>
+			</div>	
+			<div class="col-md-4">
+				<h2>404 Button</h2>
+				<p>
+					This button goes nowhere.
+				</p>
+				<p class="text-secondary small">
+					Should return 404 not found...
+				</p>
+				<p><a href="nowhere.html" class="btn btn-primary btn-lg" href="#" role="button">Go nowhere!</a></p>
+			</div>	
+			<div class="col-md-4">
+				<h2>Secret Image</h2>
+				<p>
+					Press to view the secret image!!!!
+				</p>
+				<p class="text-secondary small">
+					HINT: ID&PASSWORD are in the source code.
+				</p>
+				<p><a href="secret.html" class="btn btn-primary btn-lg" href="#" role="button">Authenticate!</a></p>
+			</div>
+	    </div>
+	    <hr>
+	    <footer class="text-center">
+		<p>M2608.001200 INTRODUCTION TO DATA COMMUNICATION NETWORKS FALL 2023</p>
+		<div class="container w-25 text-center">
+			<img src="/public/nxclab.jpg" class="img-fluid" alt="Unable to load nxclab.jpg">
+		</div>
+	    </footer>
+	</div> <!-- /container -->
+    </body>
+	<script> 
+		$(".custom-file-input").on("change", function() {
+		  var fileName = $(this).val().split("\\").pop();
+		  $(this).siblings(".custom-file-label").addClass("selected").html("File posted!");
+		});
+        
+		const handleImageUpload = event => {
+		const files = event.target.files
+		const formData = new FormData()
+		formData.append('upload', files[0])
+
+		fetch('album.html', {
+			method: 'POST',
+			body: formData
+		})
+		.then(response => response.json())
+		.then(data => {
+			console.log(data.path)
+		})
+		.catch(error => {
+			console.error(error)
+		})
+		}
+
+		document.querySelector('#customFile').addEventListener('change', event => {
+		handleImageUpload(event)
+		})
+	</script>
+</html>
+

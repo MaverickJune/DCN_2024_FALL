@@ -23,15 +23,13 @@
 #include "netinet/tcp.h"
 #include "pthread.h"
 
-#define update() printf("\033[H\033[J")
-#define gotoxy(x, y) printf("\033[%d;%dH", x, y)
-#define red() printf("\033[0;31m")
-#define green() printf("\033[0;32m")
-#define yellow() printf("\033[0;33m")
-#define white() printf("\033[0;37m")
-#define reset() printf("\033[0m")
+#define UPDATE() printf("\033[H\033[J")
+#define GOTO_X_Y(x, y) printf("\033[%d;%dH", x, y)
 
-#define ERROR_PRT(...) {fprintf(stderr, "\033[0;31m"); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\033[0m");}
+#define RED_PRTF(...) {printf("\033[0;31m"); printf(__VA_ARGS__); printf("\033[0m");}
+#define GREEN_PRTF(...) {printf("\033[0;32m"); printf(__VA_ARGS__); printf("\033[0m");}
+#define YELLOW_PRTF(...) {printf("\033[0;33m"); printf(__VA_ARGS__); printf("\033[0m");}
+#define ERROR_PRTF(...) {fprintf(stderr, "\033[0;31m"); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\033[0m");}
 
 #define STR_LEN 128
 #define DEFAULT_MAX_NUM 16

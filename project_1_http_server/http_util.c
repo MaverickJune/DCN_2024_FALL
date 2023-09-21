@@ -7,14 +7,12 @@
 
 #include "http_functions.h"
 
-// Create an empty HTTP header struct
-// Returns NULL if not successful.
 http_t *init_http ()
 {
     http_t *http = (http_t *) calloc(1, sizeof(http_t));
     if (http == NULL)
     {
-        ERROR_PRT ("ERROR init_http_response(): calloc()\n");
+        ERROR_PRTF ("ERROR init_http_response(): calloc()\n");
         return NULL;
     }
 
@@ -30,28 +28,25 @@ http_t *init_http ()
     memset (http->fields, 0, http->max_field_count * sizeof(http_field_t));
     if (http->fields == NULL)
     {
-        ERROR_PRT ("ERROR parse_http_header(): fields calloc()\n");
+        ERROR_PRTF ("ERROR parse_http_header(): fields calloc()\n");
         free_http (http);
         return NULL;
     }
     return http;
 }
 
-// Create an empty HTTP response message header with version and status.
-// Skips arguments if NULL.
-// Returns NULL if not successful.
 http_t *init_http_with_arg (char *method, char *path, char *version, char *status)
 {
     if (version == NULL || status == NULL)
     {
-        ERROR_PRT ("ERROR init_http_response(): NULL parameter\n");
+        ERROR_PRTF ("ERROR init_http_response(): NULL parameter\n");
         return NULL;
     }
 
     http_t *response = init_http();
     if (response == NULL)
     {
-        ERROR_PRT ("ERROR init_http_response(): init_http()\n");
+        ERROR_PRTF ("ERROR init_http_response(): init_http()\n");
         return NULL;
     }
 
@@ -60,7 +55,7 @@ http_t *init_http_with_arg (char *method, char *path, char *version, char *statu
         response->method = copy_string(method);
         if (response->method == NULL)
         {
-            ERROR_PRT ("ERROR init_http_response(): method copy\n");
+            ERROR_PRTF ("ERROR init_http_response(): method copy\n");
             goto ERROR;
         }
     }
@@ -69,7 +64,7 @@ http_t *init_http_with_arg (char *method, char *path, char *version, char *statu
         response->path = copy_string(path);
         if (response->path == NULL)
         {
-            ERROR_PRT ("ERROR init_http_response(): path copy\n");
+            ERROR_PRTF ("ERROR init_http_response(): path copy\n");
             goto ERROR;
         }
     }
@@ -78,7 +73,7 @@ http_t *init_http_with_arg (char *method, char *path, char *version, char *statu
         response->version = copy_string(version);
         if (response->version == NULL)
         {
-            ERROR_PRT ("ERROR init_http_response(): version copy\n");
+            ERROR_PRTF ("ERROR init_http_response(): version copy\n");
             goto ERROR;
         }
     }
@@ -87,7 +82,7 @@ http_t *init_http_with_arg (char *method, char *path, char *version, char *statu
         response->status = copy_string(status);
         if (response->status == NULL)
         {
-            ERROR_PRT ("ERROR init_http_response(): status copy\n");
+            ERROR_PRTF ("ERROR init_http_response(): status copy\n");
             goto ERROR;
         }
     }
@@ -98,26 +93,24 @@ http_t *init_http_with_arg (char *method, char *path, char *version, char *statu
     return NULL;
 }
 
-// Deep-copy HTTP struct.
-// Returns pointer to copied HTTP struct if successful, NULL if not.
 http_t *copy_http (http_t *http)
 {
     if (http == NULL)
     {
-        ERROR_PRT ("ERROR copy_http(): NULL parameter\n");
+        ERROR_PRTF ("ERROR copy_http(): NULL parameter\n");
         return NULL;
     }
 
     http_t *copy = init_http_with_arg (http->method, http->path, http->version, http->status);
     if (copy == NULL)
     {
-        ERROR_PRT ("ERROR copy_http(): init_http_with_arg()\n");
+        ERROR_PRTF ("ERROR copy_http(): init_http_with_arg()\n");
         return NULL;
     }
 
     if (add_body_to_http (copy, http->body_size, http->body_data) == -1)
     {
-        ERROR_PRT ("ERROR copy_http(): add_body_to_http()\n");
+        ERROR_PRTF ("ERROR copy_http(): add_body_to_http()\n");
         goto ERROR;
     }
 
@@ -125,7 +118,7 @@ http_t *copy_http (http_t *http)
     {
         if (add_field_to_http (copy, http->fields[i].field, http->fields[i].val) == -1)
         {
-            ERROR_PRT ("ERROR copy_http(): add_field_to_http()\n");
+            ERROR_PRTF ("ERROR copy_http(): add_field_to_http()\n");
             goto ERROR;
         }
     }
@@ -136,7 +129,6 @@ http_t *copy_http (http_t *http)
     return NULL;
 }
 
-// Free HTTP struct.
 void free_http (http_t *http)
 {
     if (http == NULL)
@@ -158,13 +150,11 @@ void free_http (http_t *http)
     free(http);
 }
 
-// Find value of a header field in a HTTP struct.
-// Returns pointer to value if successful, NULL if not.
 char *find_http_field_val (http_t *http, char *field)
 {
     if (http == NULL || field == NULL)
     {
-        ERROR_PRT ("ERROR find_http_request_header_field(): NULL parameter\n");
+        ERROR_PRTF ("ERROR find_http_request_header_field(): NULL parameter\n");
         return NULL;
     }
     for (int i = 0; i < http->field_count; i++)
@@ -175,19 +165,17 @@ char *find_http_field_val (http_t *http, char *field)
     return NULL;
 }
 
-// Add a header field to HTTP struct.
-// Returns 0 if successful, -1 if not.
 int add_field_to_http (http_t *http, char *field, char *val)
 {
     if (http == NULL || field == NULL || val == NULL)
     {
-        ERROR_PRT ("ERROR add_field_to_http(): NULL parameter\n");
+        ERROR_PRTF ("ERROR add_field_to_http(): NULL parameter\n");
         return -1;
     }
 
     if (find_http_field_val (http, field) != NULL)
     {
-        ERROR_PRT ("ERROR add_field_to_http(): field already exists\n");
+        ERROR_PRTF ("ERROR add_field_to_http(): field already exists\n");
         return -1;
     }
 
@@ -197,7 +185,7 @@ int add_field_to_http (http_t *http, char *field, char *val)
         http->fields = (http_field_t *) realloc(http->fields, http->max_field_count * sizeof(http_field_t));
         if (http->fields == NULL)
         {
-            ERROR_PRT ("ERROR add_field_to_http(): fields realloc()\n");
+            ERROR_PRTF ("ERROR add_field_to_http(): fields realloc()\n");
             http->max_field_count /= 2;
             return -1;
         }
@@ -207,14 +195,14 @@ int add_field_to_http (http_t *http, char *field, char *val)
     http->fields[http->field_count].field = copy_string (field);
     if (http->fields[http->field_count].field == NULL)
     {
-        ERROR_PRT ("ERROR add_field_to_http(): field copy\n");
+        ERROR_PRTF ("ERROR add_field_to_http(): field copy\n");
         return -1;
     }
 
     http->fields[http->field_count].val = copy_string (val);
     if (http->fields[http->field_count].val == NULL)
     {
-        ERROR_PRT ("ERROR add_field_to_http(): val copy\n");
+        ERROR_PRTF ("ERROR add_field_to_http(): val copy\n");
         return -1;
     }
 
@@ -222,13 +210,11 @@ int add_field_to_http (http_t *http, char *field, char *val)
     return 0;
 }
 
-// Remove a header field from HTTP struct.
-// Returns 0 if successful, -1 if not.
 int remove_field_from_http (http_t *http, char *field)
 {
     if (http == NULL || field == NULL)
     {
-        ERROR_PRT ("ERROR remove_field_from_http(): NULL parameter\n");
+        ERROR_PRTF ("ERROR remove_field_from_http(): NULL parameter\n");
         return -1;
     }
 
@@ -258,14 +244,11 @@ int remove_field_from_http (http_t *http, char *field)
     return 0;
 }
 
-// Add a body to HTTP struct. Includes addition of Content-Length field.
-// Skips if body_size is 0 or body_data is NULL.
-// Returns 0 if successful, -1 if not.
 int add_body_to_http (http_t *http, size_t body_size, void *body_data)
 {
     if (http == NULL)
     {
-        ERROR_PRT ("ERROR add_body_to_http_response(): NULL parameter\n");
+        ERROR_PRTF ("ERROR add_body_to_http_response(): NULL parameter\n");
         return -1;
     }
     if (body_size == 0 || body_data == NULL)
@@ -273,7 +256,7 @@ int add_body_to_http (http_t *http, size_t body_size, void *body_data)
 
     if (http->body_data != NULL || http->body_size != 0)
     {
-        ERROR_PRT ("ERROR add_body_to_http_response(): body_data already exists\n");
+        ERROR_PRTF ("ERROR add_body_to_http_response(): body_data already exists\n");
         return -1;
     }
 
@@ -283,7 +266,7 @@ int add_body_to_http (http_t *http, size_t body_size, void *body_data)
         sprintf(content_length, "%lu", body_size);
         if (add_field_to_http (http, "Content-Length", content_length) == -1)
         {
-            ERROR_PRT ("ERROR add_body_to_http_response(): add_field_to_http()\n");
+            ERROR_PRTF ("ERROR add_body_to_http_response(): add_field_to_http()\n");
             return -1;
         }
     }
@@ -292,9 +275,9 @@ int add_body_to_http (http_t *http, size_t body_size, void *body_data)
     http->body_data = (void *) malloc(body_size);
     if (http->body_data == NULL)
     {
-        ERROR_PRT ("ERROR add_body_to_http_response(): body_data malloc()\n");
+        ERROR_PRTF ("ERROR add_body_to_http_response(): body_data malloc()\n");
         if (remove_field_from_http (http, "Content-Length") == -1)
-            ERROR_PRT ("ERROR add_body_to_http_response(): remove_field_from_http()\n");
+            ERROR_PRTF ("ERROR add_body_to_http_response(): remove_field_from_http()\n");
         return -1;
     }
     memcpy(http->body_data, body_data, body_size);
@@ -302,13 +285,11 @@ int add_body_to_http (http_t *http, size_t body_size, void *body_data)
     return 0;
 }
 
-// Remove a body from HTTP struct.
-// Returns 0 if successful, -1 if not.
 int remove_body_from_http (http_t *http)
 {
     if (http == NULL)
     {
-        ERROR_PRT ("ERROR remove_body_from_http_response(): NULL parameter\n");
+        ERROR_PRTF ("ERROR remove_body_from_http_response(): NULL parameter\n");
         return -1;
     }
 
@@ -321,20 +302,18 @@ int remove_body_from_http (http_t *http)
 
     if (remove_field_from_http (http, "Content-Length") == -1)
     {
-        ERROR_PRT ("ERROR remove_body_from_http_response(): remove_field_from_http()\n");
+        ERROR_PRTF ("ERROR remove_body_from_http_response(): remove_field_from_http()\n");
         return -1;
     }
 
     return 0;
 }
 
-// Parses a HTTP header string.
-// Returns parsed HTTP struct if successful, NULL if not.
 http_t *parse_http_header (char *header_str)
 {
     if (header_str == NULL)
     {
-        ERROR_PRT ("ERROR parse_http_header(): NULL parameter\n");
+        ERROR_PRTF ("ERROR parse_http_header(): NULL parameter\n");
         return NULL;
     }
 
@@ -344,7 +323,7 @@ http_t *parse_http_header (char *header_str)
     char *next_line = line + strlen(line) + 1;
     if (line == NULL)
     {
-        ERROR_PRT ("ERROR parse_http_header(): first-line\n");
+        ERROR_PRTF ("ERROR parse_http_header(): first-line\n");
         goto ERROR;
     }
     char *token = strtok (line, " ");
@@ -355,7 +334,7 @@ http_t *parse_http_header (char *header_str)
             http->method = copy_string(token);
             if (http->method == NULL)
             {
-                ERROR_PRT ("ERROR parse_http_header(): method copy\n");
+                ERROR_PRTF ("ERROR parse_http_header(): method copy\n");
                 goto ERROR;
             }
         }
@@ -371,7 +350,7 @@ http_t *parse_http_header (char *header_str)
             http->path = copy_string(token);
             if (http->path == NULL)
             {
-                ERROR_PRT ("ERROR parse_http_header(): path copy\n");
+                ERROR_PRTF ("ERROR parse_http_header(): path copy\n");
                 goto ERROR;
             }
         }
@@ -380,20 +359,20 @@ http_t *parse_http_header (char *header_str)
             http->version = copy_string(token);
             if (http->version == NULL)
             {
-                ERROR_PRT ("ERROR parse_http_header(): version copy\n");
+                ERROR_PRTF ("ERROR parse_http_header(): version copy\n");
                 goto ERROR;
             }
         }
         else
         {
-            ERROR_PRT ("ERROR parse_http_header(): first-line token - token: %s\n", token);
+            ERROR_PRTF ("ERROR parse_http_header(): first-line token - token: %s\n", token);
             goto ERROR;
         }
         token = strtok (NULL, " ");
     }
     if (http->method == NULL || http->path == NULL || http->version == NULL)
     {
-        ERROR_PRT ("ERROR parse_http_header(): first-line - method: %s, path: %s, version: %s\n",
+        ERROR_PRTF ("ERROR parse_http_header(): first-line - method: %s, path: %s, version: %s\n",
                 http->method? http->method : "NULL", http->path? http->path : "NULL", http->version? http->version : "NULL");
         goto ERROR;
     }
@@ -405,7 +384,7 @@ http_t *parse_http_header (char *header_str)
         token = strtok (line, ":");
         if (token == NULL)
         {
-            ERROR_PRT ("ERROR parse_http_header(): field token - token: %s\n", token? token : "NULL");
+            ERROR_PRTF ("ERROR parse_http_header(): field token - token: %s\n", token? token : "NULL");
             goto ERROR;
         }
         char *field = token;
@@ -414,7 +393,7 @@ http_t *parse_http_header (char *header_str)
             val++;
         if (add_field_to_http (http, field, val) == -1)
         {
-            ERROR_PRT ("ERROR parse_http_header(): add_field_to_http()\n");
+            ERROR_PRTF ("ERROR parse_http_header(): add_field_to_http()\n");
             goto ERROR;
         }
         line = strtok(next_line, "\r\n");
@@ -429,20 +408,113 @@ http_t *parse_http_header (char *header_str)
     return NULL;
 }
 
-// Format HTTP struct to HTTP, and stores it a on buffer. 
-// Dynamically allocates memory for buffer.
-// Returns number of bytes written if successful, -1 if not.
+http_t *parse_multipart_content_body (char** body_p, char* boundary, size_t body_size)
+{
+    if (body_p == NULL || boundary == NULL || body_size == 0 || *body_p == NULL)
+    {
+        ERROR_PRTF ("ERROR parse_multipart_content_body(): NULL parameter\n");
+        return NULL;
+    }
+    char *body = *body_p;
+    char *head_ptr = body, *eoh_ptr = body;
+    while (1)
+    {
+        if (strncmp (head_ptr, boundary, strlen(boundary)) == 0)
+        {
+            head_ptr += strlen(boundary);
+            if (strncmp (head_ptr, "--", 2) == 0)
+            {
+                *body_p = body + body_size;
+                return NULL;
+            }
+            head_ptr += 2;
+            break;
+        }
+        head_ptr++;
+        if (head_ptr - body >= body_size)
+        {
+            ERROR_PRTF ("ERROR parse_multipart_content_body(): boundary not found\n");
+            return NULL;
+        }
+    }
+
+    eoh_ptr = head_ptr;
+    while (strncmp (eoh_ptr, "\r\n\r\n", 4) != 0)
+    {
+        eoh_ptr++;
+        if (eoh_ptr - body >= body_size)
+        {
+            ERROR_PRTF ("ERROR parse_multipart_content_body(): end of header not found\n");
+            return NULL;
+        }
+    }
+    eoh_ptr += 4;
+    *(eoh_ptr - 1) = '\0';
+
+    http_t *http = init_http();
+    if (http == NULL)
+    {
+        ERROR_PRTF ("ERROR parse_multipart_content_body(): init_http()\n");
+        return NULL;
+    }
+
+    char *line = strtok(head_ptr, "\r\n");
+    char *next_line = line + strlen(line) + 1;
+    while (1)
+    {
+        char *token = strtok (line, ":");
+        if (token == NULL)
+        {
+            ERROR_PRTF ("ERROR parse_multipart_content_body(): field token - token: %s\n", token? token : "NULL");
+            goto ERROR;
+        }
+        char *field = token;
+        char *val = strtok (NULL, "\r\n");
+        while (val[0] == ' ')
+            val++;
+        if (add_field_to_http (http, field, val) == -1)
+        {
+            ERROR_PRTF ("ERROR parse_multipart_content_body(): add_field_to_http()\n");
+            goto ERROR;
+        }
+        line = strtok(next_line, "\r\n");
+        if (line == NULL)
+            break;
+        next_line = line + strlen(line) + 1;
+    }
+
+    head_ptr = eoh_ptr;
+    while (1)
+    {
+        if (head_ptr - body >= body_size || strncmp (head_ptr, boundary, strlen(boundary)) == 0)
+            break;
+        head_ptr++;
+    }
+    size_t data_size = head_ptr - eoh_ptr;
+    if (add_body_to_http (http, data_size, eoh_ptr) == -1)
+    {
+        ERROR_PRTF ("ERROR parse_multipart_content_body(): add_body_to_http()\n");
+        goto ERROR;
+    }
+
+    *body_p = head_ptr;
+    return http;
+    ERROR:
+    free_http(http);
+    return NULL;
+}
+
 ssize_t write_http_to_buffer (http_t *http, void** buffer_ptr)
 {
     size_t buffer_size = 0;
     if (http == NULL || buffer_ptr == NULL)
     {
-        ERROR_PRT ("ERROR write_http_to_buffer(): NULL parameter\n");
+        ERROR_PRTF ("ERROR write_http_to_buffer(): NULL parameter\n");
         return -1;
     }
     if (http->version == NULL)
     {
-        ERROR_PRT ("ERROR write_http_to_buffer(): NULL version\n");
+        ERROR_PRTF ("ERROR write_http_to_buffer(): NULL version\n");
         return -1;
     }
     buffer_size += strlen(http->version) + 1;
@@ -462,7 +534,7 @@ ssize_t write_http_to_buffer (http_t *http, void** buffer_ptr)
     *buffer_ptr = (void *) calloc(1, buffer_size);
     if (*buffer_ptr == NULL)
     {
-        ERROR_PRT ("ERROR write_http_to_buffer(): buffer calloc()\n");
+        ERROR_PRTF ("ERROR write_http_to_buffer(): buffer calloc()\n");
         return -1;
     }
     char *buffer = (char *) *buffer_ptr;
@@ -487,7 +559,7 @@ ssize_t write_http_to_buffer (http_t *http, void** buffer_ptr)
     buffer += strlen(buffer);
     if ((char *) *buffer_ptr + buffer_size != http->body_size + buffer)
     {
-        ERROR_PRT ("ERROR write_http_to_buffer(): buffer size\n");
+        ERROR_PRTF ("ERROR write_http_to_buffer(): buffer size\n");
         free (*buffer_ptr);
         *buffer_ptr = NULL;
         return -1;
@@ -506,18 +578,26 @@ void print_tuple_yellow (char *a, char *b, int format_len, int indent)
 {
     for (int i = 0; i < indent; i++)
         printf ("\t");
-    yellow();
-    printf ("%s: %*s", a? a : "NULL", format_len - (int)strlen(a), "");
-    reset();
+    YELLOW_PRTF ("%s: %*s", a? a : "NULL", format_len - (int)strlen(a), "");
     printf ("%s\n", b? b : "NULL");
 }
 
-// Print HTTP struct to stdout.
+void print_tuple_STATUS (char *a, char *status, int format_len, int indent)
+{
+    for (int i = 0; i < indent; i++)
+        printf ("\t");
+    YELLOW_PRTF ("%s: %*s", a? a : "NULL", format_len - (int)strlen(a), "");
+    printf ("%s", status == NULL? "" : atoi(status) >= 400? "\033[1;31m" : 
+        atoi(status) >= 300 ? "\033[1;33m" : "\033[1;32m");
+    printf ("%s\n", status? status : "NULL");
+    printf ("\033[0m");
+}
+
 void print_http_header (http_t *http)
 {
     if (http == NULL)
     {
-        ERROR_PRT ("ERROR print_http_header(): NULL parameter\n");
+        ERROR_PRTF ("ERROR print_http_header(): NULL parameter\n");
         return;
     }
     int longest_element = 11;
@@ -529,21 +609,17 @@ void print_http_header (http_t *http)
     print_tuple_yellow ("METHOD", http->method, longest_element, 2);
     print_tuple_yellow ("PATH", http->path, longest_element, 2);
     print_tuple_yellow ("VERSION", http->version, longest_element, 2);
-    print_tuple_yellow ("STATUS", http->status, longest_element, 2);
+    print_tuple_STATUS ("STATUS", http->status, longest_element, 2);
     char int_str[32] = {0};
     sprintf(int_str, "%lu", http->body_size);
     print_tuple_yellow ("BODY SIZE", int_str, longest_element, 2);
     sprintf(int_str, "%d", http->field_count);
     print_tuple_yellow ("FIELD COUNT", (char *) int_str, longest_element, 2);
-    yellow();
-    printf ("\t\tFIELDS:\n");
-    reset();
+    YELLOW_PRTF ("\t\tFIELDS:\n");
     for (int i = 0; i < http->field_count; i++)
         print_tuple_yellow (http->fields[i].field, http->fields[i].val, longest_field, 3);
 }
 
-// Encode data to base64.
-// From https://stackoverflow.com/questions/342409/how-do-i-base64-encode-decode-in-c
 char *base64_encode(char *data, size_t input_length) 
 {
     static char encoding_table[] = {
@@ -562,7 +638,7 @@ char *base64_encode(char *data, size_t input_length)
     char *encoded_data = calloc(1, output_length);
     if (encoded_data == NULL)
     {
-        ERROR_PRT ("ERROR base64_encode(): calloc() failed.\n");
+        ERROR_PRTF ("ERROR base64_encode(): calloc() failed.\n");
         return NULL;
     }
 
@@ -587,26 +663,23 @@ char *base64_encode(char *data, size_t input_length)
     return encoded_data;
 }
 
-// Alloc memory for string and copy it.
-// Returns pointer to copied string if successful, NULL if not.
 char *copy_string (char *string)
 {
     if (string == NULL)
     {
-        ERROR_PRT ("ERROR copy_string(): NULL parameter\n");
+        ERROR_PRTF ("ERROR copy_string(): NULL parameter\n");
         return NULL;
     }
     char *copy = (char *) calloc(strlen(string) + 1, sizeof(char));
     if (copy == NULL)
     {
-        ERROR_PRT ("ERROR copy_string(): calloc()\n");
+        ERROR_PRTF ("ERROR copy_string(): calloc()\n");
         return NULL;
     }
     strcpy(copy, string);
     return copy;
 }
 
-// Write size bytes from buffer to socket.
 ssize_t write_bytes (int socket, char *buffer, size_t size)
 {
     ssize_t bytes_sent = 0;
@@ -617,7 +690,7 @@ ssize_t write_bytes (int socket, char *buffer, size_t size)
         bytes_sent = write(socket, buffer, bytes_remaining);
         if (bytes_sent == -1)
         {
-            ERROR_PRT ("ERROR write_bytes(): write() failed.\n");
+            ERROR_PRTF ("ERROR write_bytes(): write() failed.\n");
             return -1;
         }
         bytes_remaining -= bytes_sent;
@@ -626,7 +699,6 @@ ssize_t write_bytes (int socket, char *buffer, size_t size)
     return size;
 }
 
-// Read size bytes from socket to buffer.
 ssize_t read_bytes (int socket, char *buffer, size_t size)
 {
     ssize_t bytes_received = 0;
@@ -636,7 +708,7 @@ ssize_t read_bytes (int socket, char *buffer, size_t size)
         bytes_received = read(socket, buffer, bytes_remaining);
         if (bytes_received == -1)
         {
-            ERROR_PRT ("ERROR read_bytes(): read() failed.\n");
+            ERROR_PRTF ("ERROR read_bytes(): read() failed.\n");
             return -1;
         }
         bytes_remaining -= bytes_received;
@@ -645,19 +717,20 @@ ssize_t read_bytes (int socket, char *buffer, size_t size)
     return size;
 }
 
-// Read a file and return its contents.
-// Returns the size of the file if successful, -1 if not.
 ssize_t read_file (void** output, char *file_path)
 {
     if (output == NULL || file_path == NULL)
     {
-        ERROR_PRT ("ERROR read_file(): NULL parameter\n");
+        ERROR_PRTF ("ERROR read_file(): NULL parameter\n");
         return -1;
     }
 
     FILE *fp = fopen(file_path, "rb");
     if (fp == NULL)
+    {
+        ERROR_PRTF ("ERROR read_file(): file does not exist.\n");
         return -1;
+    }
 
     fseek(fp, 0, SEEK_END);
     size_t file_size = ftell(fp);
@@ -677,14 +750,14 @@ ssize_t read_file (void** output, char *file_path)
     *output = (void *) malloc(file_size);
     if (*output == NULL)
     {
-        ERROR_PRT ("ERROR read_file(): malloc()\n");
+        ERROR_PRTF ("ERROR read_file(): malloc()\n");
         fclose(fp);
         return -1;
     }
 
     if (fread(*output, 1, file_size, fp) != file_size)
     {
-        ERROR_PRT ("ERROR read_file(): fread()\n");
+        ERROR_PRTF ("ERROR read_file(): fread()\n");
         fclose(fp);
         free (*output);
         return -1;
@@ -694,14 +767,80 @@ ssize_t read_file (void** output, char *file_path)
     return file_size;
 }
 
-// Get file extension from file path. (ex. "index.html" -> "html", "image.jpg" -> "jpg")
-// Returns pointer to file extension if successful, NULL if not.
-// Does not include the dot, and does not allocate memory.
+ssize_t write_file (char *file_path, void *data, size_t size)
+{
+    if (data == NULL || file_path == NULL)
+    {
+        ERROR_PRTF ("ERROR write_file(): NULL parameter\n");
+        return -1;
+    }
+
+    FILE *fp = fopen(file_path, "wb");
+    if (fp == NULL)
+    {
+        ERROR_PRTF ("ERROR write_file(): fopen()\n");
+        return -1;
+    }
+
+    if (size == 0)
+    {
+        fclose(fp);
+        return 0;
+    }
+
+    if (fwrite(data, 1, size, fp) != size)
+    {
+        ERROR_PRTF ("ERROR write_file(): fwrite()\n");
+        fclose(fp);
+        return -1;
+    }
+
+    fclose(fp);
+    return size;
+}
+
+ssize_t append_file (char *file_path, void *data, size_t size)
+{
+    if (data == NULL || file_path == NULL)
+    {
+        ERROR_PRTF ("ERROR append_file(): NULL parameter\n");
+        return -1;
+    }
+
+    FILE *fp = fopen(file_path, "ab");
+    if (fp == NULL)
+    {
+        ERROR_PRTF ("ERROR append_file(): fopen()\n");
+        return -1;
+    }
+
+    if (size == 0)
+    {
+        fclose(fp);
+        return 0;
+    }
+
+    if (fwrite(data, 1, size, fp) != size)
+    {
+        ERROR_PRTF ("ERROR append_file(): fwrite()\n");
+        fclose(fp);
+        return -1;
+    }
+    fclose(fp);
+    return size;
+}
+
+
+void format_html_album (char *dir_path, char *html_path)
+{
+    
+}
+
 char *get_file_extension (char *file_path)
 {
     if (file_path == NULL)
     {
-        ERROR_PRT ("ERROR get_file_extension(): NULL parameter\n");
+        ERROR_PRTF ("ERROR get_file_extension(): NULL parameter\n");
         return NULL;
     }
     char *extension = strrchr(file_path, '.');

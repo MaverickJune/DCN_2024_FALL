@@ -15,15 +15,12 @@
 #include "signal.h"
 #include "stdint.h"
 
-#define red() printf("\033[0;31m")
-#define green() printf("\033[0;32m")
-#define yellow() printf("\033[0;33m")
-#define white() printf("\033[0;37m")
-#define reset() printf("\033[0m")
+#define RED_PRTF(...) {printf("\033[0;31m"); printf(__VA_ARGS__); printf("\033[0m");}
+#define GREEN_PRTF(...) {printf("\033[0;32m"); printf(__VA_ARGS__); printf("\033[0m");}
+#define YELLOW_PRTF(...) {printf("\033[0;33m"); printf(__VA_ARGS__); printf("\033[0m");}
+#define ERROR_PRTF(...) {fprintf(stderr, "\033[0;31m"); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\033[0m");}
 
-#define ERROR_PRT(...) {fprintf(stderr, "\033[0;31m"); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\033[0m");}
-
-#define MAX_HTTP_MSG_HEADER_SIZE 4096 // Maximum size of HTTP GET message
+#define MAX_HTTP_MSG_HEADER_SIZE 8*1024 // Maximum size of HTTP header.
 #define DEFAULT_MAX_FIELD_NUM 8 
 
 int server_engine (int server_port);
@@ -33,7 +30,6 @@ int server_engine_ans (int server_port);
 int server_routine_ans (int client_sock);
 
 /// HTTP MANIPULATION ///
-// Refer to http_util.c for details.
 
 // Struct for HTTP field.
 // All pointer locations should be dynamically allocated.
@@ -98,17 +94,20 @@ int add_body_to_http (http_t *http, size_t body_size, void *body_data);
 int remove_body_from_http (http_t *http);
 
 // Parses a HTTP header string.
-// Returns parsed HTTP struct if successful, NULL if not..
+// Returns parsed HTTP struct if successful, NULL if not.
 http_t *parse_http_header (char *request);
+
+// Parses a HTTP multipart content body string.
+// Returns parsed HTTP struct if successful, NULL if not.
+// Also updates the body pointer to point to the start of the next part.
+http_t *parse_multipart_content_body (char** body_p, char* boundary, size_t body_size);
 
 // Format HTTP struct to HTTP, and stores it a on buffer. 
 // Dynamically allocates memory for buffer.
 // Returns number of bytes written if successful, -1 if not.
 ssize_t write_http_to_buffer (http_t *http, void** buffer_ptr);
 
-
 /// UTILITIES ///
-// Refer to http_util.c for details.
 
 // Prints a tuple of strings with a format.
 void print_tuple_yellow (char *a, char *b, int format_len, int indent);
@@ -131,8 +130,19 @@ ssize_t write_bytes (int socket, char *buffer, size_t size);
 ssize_t read_bytes (int socket, char *buffer, size_t size);
 
 // Read a file and return its contents.
-// Returns the size of the file if successful, -1 if not.
+// Returns the size read if successful, -1 if not.
 ssize_t read_file (void** output, char *file_path);
+
+// Write a file with contents.
+// Returns the size written if successful, -1 if not.
+ssize_t write_file (char *file_path, void *data, size_t size);
+
+// Append a file with contents.
+// Returns the size written if successful, -1 if not.
+ssize_t append_file (char *file_path, void *data, size_t size);
+
+// Format html album with all images in a directory.
+void format_html_album (char *dir_path, char *html_path);
 
 // Get file extension from file path. (ex. "index.html" -> "html", "image.jpg" -> "jpg")
 // Returns pointer to file extension if successful, NULL if not.

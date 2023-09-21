@@ -1,0 +1,35 @@
+<!-- NXC Data Communications album.html for HTTP server -->
+<!-- Written by Jongseok Park (cakeng@snu.ac.kr) -->
+<!-- 2023. 9. 11 -->
+
+
+<!-- DO NOT MODIFY THIS FILE!!  -->
+
+<html>
+    <head>
+        <title>NXC WEB ALBUM</title>
+        <link rel="stylesheet" type="text/css" href="public/css/style.css">
+        <link rel="stylesheet" type="text/css" href="public/css/bootstrap.css">
+        <script src="public/js/jquery.js"></script>
+	    <script src="public/js/bootstrap.js"></script>
+    </head>
+    <body>
+        <section class="jumbotron text-center">
+            <div class="container">
+                <h1 class="jumbotron-heading">Photo album</h1>
+            </div>
+        </section>
+
+        <div class="album text-muted">
+            <div class="container">
+                <div class="row" id="includedContent">
+                </div>
+            </div>
+        </div>
+    </body>
+    <script> 
+        $(function(){
+            $("#includedContent").load("public/album/album_images.html"); 
+        });
+	</script>
+</html>

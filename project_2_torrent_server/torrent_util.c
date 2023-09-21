@@ -27,13 +27,13 @@ torrent_engine_t *init_torrent_engine (int port)
 {
     if (port < 0 || port > 65535)
     {
-        ERROR_PRT ("ERROR init_torrent_engine(): invalid port number.\n");
+        ERROR_PRTF ("ERROR init_torrent_engine(): invalid port number.\n");
         return NULL;
     }
     torrent_engine_t *engine = calloc (1, sizeof (torrent_engine_t));
     if (engine == NULL)
     {
-        ERROR_PRT ("ERROR init_torrent_engine(): calloc failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_engine(): calloc failed.\n");
         return NULL;
     }
     engine->port = port;
@@ -45,7 +45,7 @@ torrent_engine_t *init_torrent_engine (int port)
     engine->torrents = calloc (engine->max_num_torrents, sizeof (torrent_t*));
     if (engine->torrents == NULL)
     {
-        ERROR_PRT ("ERROR init_torrent_engine(): torrents calloc failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_engine(): torrents calloc failed.\n");
         destroy_torrent_engine (engine);
         return NULL;
     }
@@ -79,18 +79,18 @@ HASH_t create_new_torrent (torrent_engine_t *engine, char *torrent_name, char *p
 {
     if (engine == NULL || torrent_name == NULL || path == NULL)
     {
-        ERROR_PRT ("ERROR create_new_torrent(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR create_new_torrent(): invalid arguments.\n");
         return 0;
     }
     torrent_t *torrent = init_torrent_from_file (torrent_name, path);
     if (torrent == NULL)
     {
-        ERROR_PRT ("ERROR create_new_torrent(): init_torrent_from_file() failed.\n");
+        ERROR_PRTF ("ERROR create_new_torrent(): init_torrent_from_file() failed.\n");
         return 0;
     }
     if (find_torrent (engine, torrent->torrent_hash) != -1)
     {
-        ERROR_PRT ("ERROR create_new_torrent(): engine already has the torrent 0x%x\n"
+        ERROR_PRTF ("ERROR create_new_torrent(): engine already has the torrent 0x%x\n"
             , torrent->torrent_hash);
         destroy_torrent (torrent);
         return 0;
@@ -104,20 +104,20 @@ int add_torrent (torrent_engine_t *engine, HASH_t torrent_hash)
 {
     if (engine == NULL || torrent_hash == 0)
     {
-        ERROR_PRT ("ERROR add_torrent(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR add_torrent(): invalid arguments.\n");
         return -1;
     }
     ssize_t torrent_idx = find_torrent (engine, torrent_hash);
     if (torrent_idx != -1)
     {
-        ERROR_PRT ("ERROR add_torrent(): engine already has the torrent 0x%x\n",
+        ERROR_PRTF ("ERROR add_torrent(): engine already has the torrent 0x%x\n",
             torrent_hash);
         return -1;
     }
     torrent_t *torrent = init_torrent_from_hash (torrent_hash);
     if (torrent == NULL)
     {
-        ERROR_PRT ("ERROR add_torrent(): init_torrent_from_hash() failed.\n");
+        ERROR_PRTF ("ERROR add_torrent(): init_torrent_from_hash() failed.\n");
         return -1;
     }
     engine->torrents[engine->num_torrents++] = torrent;
@@ -129,7 +129,7 @@ int remove_torrent (torrent_engine_t *engine, HASH_t torrent_hash)
 {
     if (engine == NULL || torrent_hash == 0)
     {
-        ERROR_PRT ("ERROR remove_torrent(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR remove_torrent(): invalid arguments.\n");
         return -1;
     }
     ssize_t torrent_idx = find_torrent (engine, torrent_hash);
@@ -154,13 +154,13 @@ int add_peer (torrent_engine_t *engine, HASH_t torrent_hash, char *ip, int port)
 {
     if (engine == NULL || torrent_hash == 0 || ip == NULL || port < 0 || port > 65535)
     {
-        ERROR_PRT ("ERROR remove_torrent(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR remove_torrent(): invalid arguments.\n");
         return -1;
     }
     ssize_t torrent_idx = find_torrent (engine, torrent_hash);
     if (torrent_idx == -1)
     {
-        ERROR_PRT ("ERROR add_peer(): engine does not have the torrent 0x%x\n",
+        ERROR_PRTF ("ERROR add_peer(): engine does not have the torrent 0x%x\n",
             torrent_hash);
         return -1;
     }
@@ -171,13 +171,13 @@ int remove_peer (torrent_engine_t *engine, HASH_t torrent_hash, char *ip, int po
 {
     if (engine == NULL || torrent_hash == 0 || ip == NULL || port < 0 || port > 65535)
     {
-        ERROR_PRT ("ERROR remove_torrent(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR remove_torrent(): invalid arguments.\n");
         return -1;
     }
     ssize_t torrent_idx = find_torrent (engine, torrent_hash);
     if (torrent_idx == -1)
     {
-        ERROR_PRT ("ERROR remove_peer(): engine does not have the torrent 0x%x\n",
+        ERROR_PRTF ("ERROR remove_peer(): engine does not have the torrent 0x%x\n",
             torrent_hash);
         return -1;
     }
@@ -241,7 +241,7 @@ void print_torrent_status_hash (torrent_engine_t *engine, HASH_t torrent_hash)
     size_t idx = find_torrent (engine, torrent_hash);
     if (idx == -1)
     {
-        ERROR_PRT ("ERROR print_torrent_status_hash(): engine does not have the torrent 0x%x\n",
+        ERROR_PRTF ("ERROR print_torrent_status_hash(): engine does not have the torrent 0x%x\n",
             torrent_hash);
         return;
     }
@@ -275,7 +275,7 @@ torrent_t *init_torrent ()
     torrent_t *torrent = calloc (1, sizeof (torrent_t));
     if (torrent == NULL)
     {
-        ERROR_PRT ("ERROR init_torrent(): calloc failed.\n");
+        ERROR_PRTF ("ERROR init_torrent(): calloc failed.\n");
         return NULL;
     }
     torrent->torrent_hash = 0;
@@ -292,7 +292,7 @@ torrent_t *init_torrent ()
     torrent->peers = calloc (torrent->max_num_peers, sizeof (peer_data_t*));
     if (torrent->peers == NULL)
     {
-        ERROR_PRT ("ERROR init_torrent(): peers calloc failed.\n");
+        ERROR_PRTF ("ERROR init_torrent(): peers calloc failed.\n");
         destroy_torrent (torrent);
         return NULL;
     }
@@ -304,31 +304,31 @@ torrent_t *init_torrent_from_file (char *torrent_name, char* path)
 {
     if (torrent_name == NULL || path == NULL)
     {
-        ERROR_PRT ("ERROR init_torrent_from_file(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_file(): invalid arguments.\n");
         return NULL;
     }
     torrent_t *torrent = init_torrent ();
     if (torrent == NULL)
     {
-        ERROR_PRT ("ERROR init_torrent_from_file(): init_torrent() failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_file(): init_torrent() failed.\n");
         return NULL;
     }
     ssize_t file_size = get_file_size (path);
     if (file_size == -1)
     {
-        ERROR_PRT ("ERROR init_torrent_from_file(): get_file_size() failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_file(): get_file_size() failed.\n");
         destroy_torrent (torrent);
         return NULL;
     }
     if (set_torrent_info (torrent, torrent_name, file_size) == -1)
     {
-        ERROR_PRT ("ERROR init_torrent_from_file(): set_torrent_info() failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_file(): set_torrent_info() failed.\n");
         destroy_torrent (torrent);
         return NULL;
     }
     if (read_file (path, torrent->data) != torrent->file_size)
     {
-        ERROR_PRT ("ERROR init_torrent_from_file(): read_file() failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_file(): read_file() failed.\n");
         destroy_torrent (torrent);
         return NULL;
     }
@@ -346,13 +346,13 @@ torrent_t *init_torrent_from_hash (HASH_t torrent_hash)
 {
     if (torrent_hash == 0)
     {
-        ERROR_PRT ("ERROR init_torrent_from_hash(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_hash(): invalid arguments.\n");
         return NULL;
     }
     torrent_t *torrent = init_torrent ();
     if (torrent == NULL)
     {
-        ERROR_PRT ("ERROR init_torrent_from_hash(): init_torrent() failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_hash(): init_torrent() failed.\n");
         return NULL;
     }
     torrent->torrent_hash = torrent_hash;
@@ -363,13 +363,13 @@ int set_torrent_info (torrent_t *torrent, char *torrent_name, size_t file_size)
 {
     if (torrent == NULL || file_size == 0)
     {
-        ERROR_PRT ("ERROR init_torrent_from_file(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_file(): invalid arguments.\n");
         return -1;
     }
     if (torrent->data != NULL || torrent->file_size != 0 
         || torrent->num_blocks != 0 || torrent->block_status != NULL || torrent->block_hashes != NULL)
     {
-        ERROR_PRT ("ERROR init_torrent_from_file(): torrent data is not empty.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_file(): torrent data is not empty.\n");
         return -1;
     }
     strncpy (torrent->torrent_name, torrent_name, STR_LEN);
@@ -380,14 +380,14 @@ int set_torrent_info (torrent_t *torrent, char *torrent_name, size_t file_size)
     torrent->data = calloc (torrent->num_blocks, BLOCK_SIZE);
     if (torrent->data == NULL)
     {
-        ERROR_PRT ("ERROR init_torrent_from_file(): data calloc failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_file(): data calloc failed.\n");
         return -1;
     }
     
     torrent->block_hashes = calloc (torrent->num_blocks, sizeof (HASH_t));
     if (torrent->block_hashes == NULL)
     {
-        ERROR_PRT ("ERROR init_torrent_from_file(): block_hashes calloc failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_file(): block_hashes calloc failed.\n");
         free (torrent->data);
         torrent->data = NULL;
         return -1;
@@ -396,7 +396,7 @@ int set_torrent_info (torrent_t *torrent, char *torrent_name, size_t file_size)
     torrent->block_status = calloc (torrent->num_blocks, sizeof(char));
     if (torrent->block_status == NULL)
     {
-        ERROR_PRT ("ERROR init_torrent_from_file(): block_status calloc failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_file(): block_status calloc failed.\n");
         free (torrent->data);
         free (torrent->block_hashes);
         torrent->data = NULL;
@@ -414,7 +414,7 @@ int set_torrent_info (torrent_t *torrent, char *torrent_name, size_t file_size)
     {
         if (set_peer_block_info (torrent->peers[i]) == -1)
         {
-            ERROR_PRT ("ERROR init_torrent_from_file(): set_peer_block_info() failed.\n");
+            ERROR_PRTF ("ERROR init_torrent_from_file(): set_peer_block_info() failed.\n");
             free (torrent->data);
             free (torrent->block_hashes);
             free (torrent->block_status);
@@ -448,12 +448,12 @@ int save_torrent_as_file (torrent_t *torrent)
 {
     if (torrent == NULL)
     {
-        ERROR_PRT ("ERROR save_torrent_as_file(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR save_torrent_as_file(): invalid arguments.\n");
         return -1;
     }
     if (torrent->data == NULL || torrent->file_size == 0)
     {
-        ERROR_PRT ("ERROR save_torrent_as_file(): torrent data is empty.\n");
+        ERROR_PRTF ("ERROR save_torrent_as_file(): torrent data is empty.\n");
         return -1;
     }
     if (torrent->torrent_hash != get_hash (torrent->data, torrent->file_size))
@@ -465,12 +465,12 @@ int save_torrent_as_file (torrent_t *torrent)
     FILE *fp = fopen (path, "wb");
     if (fp == NULL)
     {
-        ERROR_PRT ("ERROR save_torrent_as_file(): fopen failed.\n");
+        ERROR_PRTF ("ERROR save_torrent_as_file(): fopen failed.\n");
         return -1;
     }
     if (fwrite (torrent->data, 1, torrent->file_size, fp) != torrent->file_size)
     {
-        ERROR_PRT ("ERROR save_torrent_as_file(): fwrite failed.\n");
+        ERROR_PRTF ("ERROR save_torrent_as_file(): fwrite failed.\n");
         fclose (fp);
         return -1;
     }
@@ -482,7 +482,7 @@ ssize_t find_torrent (torrent_engine_t *engine, HASH_t torrent_hash)
 {
     if (engine == NULL || torrent_hash == 0)
     {
-        ERROR_PRT ("ERROR find_torrent(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR find_torrent(): invalid arguments.\n");
         return -1;
     }
     for (size_t i = 0; i < engine->num_torrents; i++)
@@ -498,7 +498,7 @@ ssize_t find_torrent_name (torrent_engine_t *engine, char* name)
 {
     if (engine == NULL || name == NULL)
     {
-        ERROR_PRT ("ERROR find_torrent_name(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR find_torrent_name(): invalid arguments.\n");
         return -1;
     }
     for (size_t i = 0; i < engine->num_torrents; i++)
@@ -514,7 +514,7 @@ ssize_t get_num_completed_blocks (torrent_t *torrent)
 {
     if (torrent == NULL)
     {
-        ERROR_PRT ("ERROR get_num_completed_blocks(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR get_num_completed_blocks(): invalid arguments.\n");
         return -1;
     }
     if (torrent->block_status == NULL)
@@ -532,12 +532,12 @@ ssize_t get_missing_block (torrent_t *torrent, size_t start_idx)
 {
     if (torrent == NULL || start_idx >= torrent->num_blocks)
     {
-        ERROR_PRT ("ERROR get_missing_block(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR get_missing_block(): invalid arguments.\n");
         return -1;
     }
     if (torrent->block_status == NULL)
     {
-        ERROR_PRT ("ERROR get_missing_block(): torrent block_status is NULL.\n");
+        ERROR_PRTF ("ERROR get_missing_block(): torrent block_status is NULL.\n");
         return -1;
     }
     for (size_t i = start_idx; i < torrent->num_blocks; i++)
@@ -552,12 +552,12 @@ char get_peer_block_status (peer_data_t *peer, size_t block_index)
 {
     if (peer == NULL || block_index >= peer->torrent->num_blocks)
     {
-        ERROR_PRT ("ERROR get_peer_block_status(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR get_peer_block_status(): invalid arguments.\n");
         return -1;
     }
     if (peer->block_status == NULL)
     {
-        ERROR_PRT ("ERROR get_peer_block_status(): peer block_status is NULL.\n");
+        ERROR_PRTF ("ERROR get_peer_block_status(): peer block_status is NULL.\n");
         return -1;
     }
     return peer->block_status[block_index];
@@ -567,12 +567,12 @@ void *get_block_ptr (torrent_t *torrent, size_t block_index)
 {
     if (torrent == NULL || block_index >= torrent->num_blocks)
     {
-        ERROR_PRT ("ERROR get_block_ptr(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR get_block_ptr(): invalid arguments.\n");
         return NULL;
     }
     if (torrent->data == NULL)
     {
-        ERROR_PRT ("ERROR get_block_ptr(): torrent data is NULL.\n");
+        ERROR_PRTF ("ERROR get_block_ptr(): torrent data is NULL.\n");
         return NULL;
     }
     return (void *)((char *)torrent->data + block_index * BLOCK_SIZE);
@@ -582,7 +582,7 @@ int update_if_max_torrent_reached (torrent_engine_t *engine)
 {
     if (engine == NULL)
     {
-        ERROR_PRT ("ERROR update_if_max_torrent_reached(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR update_if_max_torrent_reached(): invalid arguments.\n");
         return -1;
     }
     if (engine->max_num_torrents == engine->num_torrents)
@@ -591,7 +591,7 @@ int update_if_max_torrent_reached (torrent_engine_t *engine)
         engine->torrents = realloc (engine->torrents, engine->max_num_torrents * sizeof (torrent_t*));
         if (engine->torrents == NULL)
         {
-            ERROR_PRT ("ERROR update_if_max_torrent_reached(): realloc failed.\n");
+            ERROR_PRTF ("ERROR update_if_max_torrent_reached(): realloc failed.\n");
             return -1;
         }
         for (size_t i = engine->num_torrents; i < engine->max_num_torrents; i++)
@@ -605,7 +605,7 @@ peer_data_t *init_peer_data (torrent_t *torrent)
     peer_data_t *peer_data = calloc (1, sizeof (peer_data_t));
     if (peer_data == NULL)
     {
-        ERROR_PRT ("ERROR init_peer_data(): calloc failed.\n");
+        ERROR_PRTF ("ERROR init_peer_data(): calloc failed.\n");
         return NULL;
     }
     peer_data->torrent = torrent;
@@ -620,25 +620,25 @@ int set_peer_block_info (peer_data_t *peer_data)
 {
     if (peer_data == NULL)
     {
-        ERROR_PRT ("ERROR set_peer_info(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR set_peer_info(): invalid arguments.\n");
         return -1;
     }
     torrent_t *torrent = peer_data->torrent;
     if (peer_data->block_status != NULL)
     {
-        ERROR_PRT ("ERROR set_peer_info(): peer block_status is not NULL.\n");
+        ERROR_PRTF ("ERROR set_peer_info(): peer block_status is not NULL.\n");
         return -1;
     }
     if (torrent->num_blocks == 0)
     {
-        ERROR_PRT ("ERROR set_peer_info(): torrent num_blocks is 0.\n");
+        ERROR_PRTF ("ERROR set_peer_info(): torrent num_blocks is 0.\n");
         return -1;
     }
 
     peer_data->block_status = calloc (torrent->num_blocks, sizeof (char));
     if (peer_data->block_status == NULL)
     {
-        ERROR_PRT ("ERROR init_peer_data(): block_status calloc failed.\n");
+        ERROR_PRTF ("ERROR init_peer_data(): block_status calloc failed.\n");
         destroy_peer_data (peer_data);
         return -1;
     }
@@ -651,12 +651,12 @@ int torrent_add_peer (torrent_t *torrent, char *ip, int port)
 {
     if (torrent == NULL || ip == NULL || port < 0 || port > 65535)
     {
-        ERROR_PRT ("ERROR torrent_add_peer(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR torrent_add_peer(): invalid arguments.\n");
         return -1;
     }
     if (find_peer(torrent, ip, port) != -1)
     {
-        ERROR_PRT ("ERROR torrent_add_peer(): torrent already has the peer %s:%d\n",
+        ERROR_PRTF ("ERROR torrent_add_peer(): torrent already has the peer %s:%d\n",
             ip, port);
         return -1;
     }
@@ -664,14 +664,14 @@ int torrent_add_peer (torrent_t *torrent, char *ip, int port)
     peer_data_t *peer_data = init_peer_data (torrent);
     if (peer_data == NULL)
     {
-        ERROR_PRT ("ERROR torrent_add_peer(): init_peer_data() failed.\n");
+        ERROR_PRTF ("ERROR torrent_add_peer(): init_peer_data() failed.\n");
         return -1;
     }
     if (torrent->num_blocks > 0)
     {
         if (set_peer_block_info (peer_data) == -1)
         {
-            ERROR_PRT ("ERROR torrent_add_peer(): set_peer_block_info() failed.\n");
+            ERROR_PRTF ("ERROR torrent_add_peer(): set_peer_block_info() failed.\n");
             destroy_peer_data (peer_data);
             return -1;
         }
@@ -690,7 +690,7 @@ int torrent_remove_peer (torrent_t *torrent, char *ip, int port)
 {
     if (torrent == NULL || ip == NULL || port < 0 || port > 65535)
     {
-        ERROR_PRT ("ERROR torrent_remove_peer(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR torrent_remove_peer(): invalid arguments.\n");
         return -1;
     }
     ssize_t peer_idx = find_peer (torrent, ip, port);
@@ -724,7 +724,7 @@ ssize_t find_peer (torrent_t *torrent, char *ip, int port)
 {
     if (torrent == NULL || ip == NULL || port < 0 || port > 65535)
     {
-        ERROR_PRT ("ERROR find_peer(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR find_peer(): invalid arguments.\n");
         return -1;
     }
     for (size_t i = 0; i < torrent->num_peers; i++)
@@ -741,7 +741,7 @@ int update_if_max_peer_reached (torrent_t *torrent)
 {
     if (torrent == NULL)
     {
-        ERROR_PRT ("ERROR update_if_max_peer_reached(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR update_if_max_peer_reached(): invalid arguments.\n");
         return -1;
     }
     if (torrent->num_peers == torrent->max_num_peers)
@@ -750,7 +750,7 @@ int update_if_max_peer_reached (torrent_t *torrent)
         torrent->peers = realloc (torrent->peers, torrent->max_num_peers * sizeof (peer_data_t*));
         if (torrent->peers == NULL)
         {
-            ERROR_PRT ("ERROR update_if_max_peer_reached(): realloc failed.\n");
+            ERROR_PRTF ("ERROR update_if_max_peer_reached(): realloc failed.\n");
             return -1;
         }
         for (size_t i = torrent->num_peers; i < torrent->max_num_peers; i++)
@@ -765,7 +765,7 @@ HASH_t get_hash (void* data, size_t len)
 {
     if (data == NULL || len == 0)
     {
-        ERROR_PRT ("ERROR get_hash(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR get_hash(): invalid arguments.\n");
         return 0;
     }
     HASH_t hash = HASH_SEED;
@@ -796,7 +796,7 @@ HASH_t str_to_hash (char *str)
 {
     if (str == NULL)
     {
-        ERROR_PRT ("ERROR str_to_hash(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR str_to_hash(): invalid arguments.\n");
         return 0;
     }
     if (strncmp (str, "0x", 2) != 0)
@@ -821,7 +821,7 @@ int check_ipv4 (char *ip)
 {
     if (ip == NULL)
     {
-        ERROR_PRT ("ERROR check_ipv4(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR check_ipv4(): invalid arguments.\n");
         return -1;
     }
     int num = -1;
@@ -895,14 +895,14 @@ ssize_t read_file (char *path, void *data)
 {
     if (path == NULL || data == NULL)
     {
-        ERROR_PRT ("ERROR read_file(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR read_file(): invalid arguments.\n");
         return -1;
     }
 
     FILE *fp = fopen (path, "rb");
     if (fp == NULL)
     {
-        ERROR_PRT ("ERROR read_file(): fopen failed.\n");
+        ERROR_PRTF ("ERROR read_file(): fopen failed.\n");
         return -1;
     }
         
@@ -912,7 +912,7 @@ ssize_t read_file (char *path, void *data)
 
     if (fread (data, 1, len, fp) != len)
     {
-        ERROR_PRT ("ERROR read_file(): fread failed.\n");
+        ERROR_PRTF ("ERROR read_file(): fread failed.\n");
         fclose (fp);
         return -1;
     }
@@ -926,7 +926,7 @@ ssize_t get_file_size (char *path)
     FILE *fp = fopen (path, "rb");
     if (fp == NULL)
     {
-        ERROR_PRT ("ERROR read_file(): fopen failed.\n");
+        ERROR_PRTF ("ERROR read_file(): fopen failed.\n");
         return -1;
     }
 
@@ -947,7 +947,7 @@ ssize_t write_bytes (int socket, char *buffer, size_t size)
         bytes_sent = write(socket, buffer, bytes_remaining);
         if (bytes_sent == -1)
         {
-            ERROR_PRT ("ERROR write_bytes(): write failed.\n");
+            ERROR_PRTF ("ERROR write_bytes(): write failed.\n");
             return -1;
         }
         bytes_remaining -= bytes_sent;
@@ -965,7 +965,7 @@ ssize_t read_bytes (int socket, char *buffer, size_t size)
         bytes_received = read(socket, buffer, bytes_remaining);
         if (bytes_received == -1)
         {
-            ERROR_PRT ("ERROR read_bytes(): read failed\n");
+            ERROR_PRTF ("ERROR read_bytes(): read failed\n");
             return -1;
         }
         bytes_remaining -= bytes_received;

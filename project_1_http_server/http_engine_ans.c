@@ -10,6 +10,9 @@
 #define MAX_WAITING_CONNECTIONS 10 // Maximum number of waiting connections
 #define MAX_PATH_SIZE 256 // Maximum size of path
 #define SERVER_ROOT "./server_root"
+#define ALBUM_PATH "/public/album"
+#define ALBUM_HTML_PATH "./server_root/public/album/album_images.html"
+#define ALBUM_HTML_TEMPLATE "<div class=\"card\"> <img src=\"/public/album/%s\" alt=\"Unable to load %s\"> </div>\n"
 
 int server_engine_ans (int server_port)
 {
@@ -19,7 +22,7 @@ int server_engine_ans (int server_port)
     setsockopt(server_listening_sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
     if (server_listening_sock == -1)
     {
-        ERROR_PRT ("SERVER ERROR: setsocketopt() SO_REUSEADDR error\n");
+        ERROR_PRTF ("SERVER ERROR: setsocketopt() SO_REUSEADDR error\n");
         return -1;
     }
 
@@ -31,14 +34,14 @@ int server_engine_ans (int server_port)
     server_addr_info.sin_addr.s_addr = htonl(INADDR_ANY);
     if (bind(server_listening_sock, (struct sockaddr *)&server_addr_info, sizeof(server_addr_info)) == -1)
     {
-        ERROR_PRT ("SERVER ERROR: bind() error\n");
+        ERROR_PRTF ("SERVER ERROR: bind() error\n");
         return -1;
     }
 
     // Listen for incoming connections
     if (listen(server_listening_sock, MAX_WAITING_CONNECTIONS) == -1)
     {
-        ERROR_PRT ("SERVER ERROR: listen() error\n");
+        ERROR_PRTF ("SERVER ERROR: listen() error\n");
         return -1;
     }
 
@@ -51,29 +54,21 @@ int server_engine_ans (int server_port)
 
         // Accept incoming connections
         client_connected_sock = accept(server_listening_sock, (struct sockaddr *)&client_addr_info, &client_addr_info_len);
-        // green();
         printf ("CLIENT ");
-        reset();
         printf("%s:%d ", inet_ntoa(client_addr_info.sin_addr), ntohs(client_addr_info.sin_port));
-        green();
-        printf ("CONNECTED.\n");
-        reset();
+        GREEN_PRTF ("CONNECTED.\n");
 
         if (client_connected_sock == -1)
-            ERROR_PRT ("SERVER ERROR: Failed to accept an incoming connection\n");
+            ERROR_PRTF ("SERVER ERROR: Failed to accept an incoming connection\n");
 
         // Serve the client
         server_routine_ans (client_connected_sock);
         
         // Close the connection with the client
         close(client_connected_sock);
-        // green();
         printf ("CLIENT ");
-        reset();
         printf ("%s:%d ", inet_ntoa(client_addr_info.sin_addr), ntohs(client_addr_info.sin_port));
-        green();
-        printf ("DISCONNECTED.\n\n");
-        reset();
+        GREEN_PRTF ("DISCONNECTED.\n\n");
         fflush (stdout);
     }
     // Close the server socket
@@ -88,11 +83,12 @@ int server_routine_ans (int client_sock)
     size_t bytes_received = 0;
     char *http_version = "HTTP/1.0";
     char header_buffer[MAX_HTTP_MSG_HEADER_SIZE] = {0};
+    char *eoh_ptr = header_buffer;
     int header_too_large_flag = 0;
 
     // Receive the HEADER of the client http message.
     // You have to consider the following cases:
-    // 1. End of header indicator of http is received
+    // 1. End of header (eoh) indicator of http is received (i.e., \r\n\r\n is received)
     // 2. Error occurs on read() (i.e. read() returns -1)
     // 3. Client disconnects (i.e. read() returns 0)
     // 4. MAX_HTTP_MSG_HEADER_SIZE is reached (i.e. message is too long)
@@ -103,23 +99,39 @@ int server_routine_ans (int client_sock)
         bytes_received += num_bytes;
         if (num_bytes == -1)
         {
-            ERROR_PRT ("SERVER ERROR: read() error\n");
+            ERROR_PRTF ("SERVER ERROR: read() error\n");
             return -1;
         }
         else if (num_bytes == 0)
         {
-            ERROR_PRT ("SERVER ERROR:Client disconnected\n");
+            ERROR_PRTF ("SERVER ERROR:Client disconnected\n");
             return -1;
         }
-        else if (bytes_received >= MAX_HTTP_MSG_HEADER_SIZE)
+        else
         {
-            header_too_large_flag = 1;
-            break;
+            int eoh_found = 0;
+            for (; eoh_ptr - header_buffer < bytes_received - 3; eoh_ptr++)
+            {
+                if (strncmp (eoh_ptr, "\r\n\r\n", 4) == 0)
+                {
+                    eoh_ptr += 4;
+                    eoh_found = 1;
+                    break;
+                }
+            }
+            if (eoh_found)
+            {
+                *(eoh_ptr - 1) = '\0';
+                break;
+            }
+            else if (bytes_received >= MAX_HTTP_MSG_HEADER_SIZE)
+            {
+                ERROR_PRTF ("SERVER ERROR: Header too large\n");
+                header_too_large_flag = 1;
+                break;
+            }
         }
-        else if (strncmp (header_buffer + bytes_received - 4, "\r\n\r\n", 4) == 0)
-            break;
     }
-
     http_t *request = NULL, *response = NULL;
 
     // Create different http response depending on the request.
@@ -132,7 +144,7 @@ int server_routine_ans (int client_sock)
         response = init_http_with_arg (NULL, NULL, http_version, "431");
         if (response == NULL)
         {
-            ERROR_PRT ("SERVER ERROR: Failed to create HTTP response\n");
+            ERROR_PRTF ("SERVER ERROR: Failed to create HTTP response\n");
             return -1;
         }
         add_body_to_http (response, sizeof(body), body);
@@ -145,13 +157,11 @@ int server_routine_ans (int client_sock)
         request = parse_http_header (header_buffer);
         if (request == NULL)
         {
-            ERROR_PRT ("SERVER ERROR: Failed to parse HTTP header\n");
-            return -1;
+            ERROR_PRTF ("SERVER ERROR: Failed to parse HTTP header\n");
+            goto EXIT;
         }
         printf ("\tHTTP ");
-        green();
-        printf ("REQUEST:\n");
-        reset();
+        GREEN_PRTF ("REQUEST:\n");
         print_http_header (request);
 
         // Case 2: GET request
@@ -210,8 +220,8 @@ int server_routine_ans (int client_sock)
                     response = init_http_with_arg (NULL, NULL, http_version, "404");
                     if (response == NULL)
                     {
-                        ERROR_PRT ("SERVER ERROR: Failed to create HTTP response\n");
-                        return -1;
+                        ERROR_PRTF ("SERVER ERROR: Failed to create HTTP response\n");
+                        goto EXIT;
                     }
                     add_body_to_http (response, sizeof(body), body);
                     add_field_to_http (response, "Content-Type", "text/html");
@@ -224,20 +234,23 @@ int server_routine_ans (int client_sock)
                     response = init_http_with_arg (NULL, NULL, http_version, "200");
                     if (response == NULL)
                     {
-                        ERROR_PRT ("SERVER ERROR: Failed to create HTTP response\n");
-                        return -1;
+                        ERROR_PRTF ("SERVER ERROR: Failed to create HTTP response\n");
+                        free (file_buffer);
+                        goto EXIT;
                     }
                     add_body_to_http (response, file_size, file_buffer);
                     add_field_to_http (response, "Connection", "close");
                     free (file_buffer);
                     if (strncmp (get_file_extension (file_path), "html", 4) == 0)
                         add_field_to_http (response, "Content-Type", "text/html");
-                    else if (strncmp (get_file_extension (file_path), "jpg", 3) == 0)
-                        add_field_to_http (response, "Content-Type", "image/jpeg");
+                    else if (strncmp (get_file_extension (file_path), "css", 3) == 0)
+                        add_field_to_http (response, "Content-Type", "text/css");
+                    else if (strncmp (get_file_extension (file_path), "js", 2) == 0)
+                        add_field_to_http (response, "Content-Type", "text/javascript");
                     else if (strncmp (get_file_extension (file_path), "png", 3) == 0)
                         add_field_to_http (response, "Content-Type", "image/png");
-                    else if (strncmp (get_file_extension (file_path), "mp3", 3) == 0)
-                        add_field_to_http (response, "Content-Type", "audio/mpeg");
+                    else if (strncmp (get_file_extension (file_path), "jpg", 3) == 0)
+                        add_field_to_http (response, "Content-Type", "image/jpeg");
                     else
                         add_field_to_http (response, "Content-Type", "application/octet-stream");
                 }
@@ -250,8 +263,8 @@ int server_routine_ans (int client_sock)
                 response = init_http_with_arg (NULL, NULL, http_version, "401");
                 if (response == NULL)
                 {
-                    ERROR_PRT ("SERVER ERROR: Failed to create HTTP response\n");
-                    return -1;
+                    ERROR_PRTF ("SERVER ERROR: Failed to create HTTP response\n");
+                    goto EXIT;
                 }
                 add_body_to_http (response, sizeof(body), body);
                 add_field_to_http (response, "Content-Type", "text/html");
@@ -259,15 +272,107 @@ int server_routine_ans (int client_sock)
                 add_field_to_http (response, "WWW-Authenticate", "Basic realm=\"ID & Password?\"");
             }
         }
+        else if (strncmp (request->method, "POST", 4) == 0)
+        {
+            // Case 3: POST request
+            // Refer to https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
+            char *body_len_str = find_http_field_val (request, "Content-Length");
+            size_t body_len = atoi (body_len_str);
+            // Assumes that the boundary is the last field value in Content-Type
+            char *boundary = strstr (find_http_field_val (request, "Content-Type"), "boundary=") + 9;
+            char *request_body = (char *)calloc (1, body_len + 1);
+            if (request_body == NULL)
+            {
+                ERROR_PRTF ("SERVER ERROR: Failed to allocate memory for request_body\n");
+                goto EXIT;
+            }
+            // Read the request_body of the client http message.
+            size_t body_in_header_len = bytes_received - (eoh_ptr - header_buffer);
+            if (body_in_header_len > 0)
+                memcpy (request_body, eoh_ptr, body_in_header_len);
+            read_bytes (client_sock, request_body + body_in_header_len, body_len - body_in_header_len);
+
+            char *body_ptr = request_body;
+            while (1)
+            {
+                // Parse the request_body of the multipart content request_body.
+                http_t *body_part = parse_multipart_content_body (&body_ptr, boundary, 
+                    (request_body + body_len) - body_ptr);
+                if (body_ptr >= request_body + body_len)
+                    break;
+                if (body_part == NULL)
+                {
+                    ERROR_PRTF ("SERVER ERROR: Failed to parse multipart content request body\n");
+                    free (request_body);
+                    goto EXIT;
+                }
+                printf ("\tHTTP ");
+                GREEN_PRTF ("POST BODY:\n");
+                print_http_header (body_part);
+
+                // Get the filename of the file.
+                char *filename = strstr (find_http_field_val(body_part, "Content-Disposition"), "filename=") + 10;
+                strchr (filename, '"')[0] = '\0';
+                
+                // Check if the file is an image file.
+                char *extension = get_file_extension (filename);
+                if (strncmp (extension, "jpg", 3) != 0)
+                {
+                    ERROR_PRTF ("SERVER ERROR: Invalid file type\n");
+                    free (request_body);
+                    free_http (body_part);
+                    goto EXIT;
+                }
+
+                // Add the file to the album.
+                char path[MAX_PATH_SIZE] = {0};
+                snprintf (path, MAX_PATH_SIZE-1, "%s%s/%s", SERVER_ROOT, ALBUM_PATH, filename);
+                path [MAX_PATH_SIZE-1] = '\0';
+                if (write_file (path, body_part->body_data, body_part->body_size) == -1)
+                {
+                    ERROR_PRTF ("SERVER ERROR: Failed to write file\n");
+                    free (request_body);
+                    free_http (body_part);
+                    goto EXIT;
+                }
+                free_http (body_part);
+
+                // Append the appropriate html for the new image to album.html.
+                size_t html_size = strlen (ALBUM_HTML_TEMPLATE) + strlen (filename)*2 + 1;
+                char *html = (char *)calloc (1, html_size);
+                if (html == NULL)
+                {
+                    ERROR_PRTF ("SERVER ERROR: Failed to allocate memory for html\n");
+                    free (request_body);
+                    goto EXIT;
+                }
+                sprintf (html, ALBUM_HTML_TEMPLATE, filename, filename);
+                append_file (ALBUM_HTML_PATH , html, strlen (html));
+                free (html);
+            }
+            free (request_body);
+
+            // Respond with a 200 OK.
+            char body[] = "<html><body><h1>200 OK</h1></body></html>";
+            response = init_http_with_arg (NULL, NULL, http_version, "200");
+            if (response == NULL)
+            {
+                ERROR_PRTF ("SERVER ERROR: Failed to create HTTP response\n");
+                goto EXIT;
+            }
+            add_body_to_http (response, sizeof(body), body);
+            add_field_to_http (response, "Content-Type", "text/html");
+            add_field_to_http (response, "Connection", "close");
+        }
         else
         {
-            // Case 3: Other requests
+            // Case 4: Other requests
             char body[] = "<html><body><h1>400 Bad Request</h1></body></html>";
             response = init_http_with_arg (NULL, NULL, http_version, "400");
             if (response == NULL)
             {
-                ERROR_PRT ("SERVER ERROR: Failed to create HTTP response\n");
-                return -1;
+                ERROR_PRTF ("SERVER ERROR: Failed to create HTTP response\n");
+                goto EXIT;
             }
             add_body_to_http (response, sizeof(body), body);
             add_field_to_http (response, "Content-Type", "text/html");
@@ -279,9 +384,7 @@ int server_routine_ans (int client_sock)
     if (response != NULL)
     {
         printf ("\tHTTP ");
-        green();
-        printf ("RESPONSE:\n");
-        reset();
+        GREEN_PRTF ("RESPONSE:\n");
         print_http_header (response);
 
         // Parse http response to buffer
@@ -289,21 +392,25 @@ int server_routine_ans (int client_sock)
         ssize_t response_size = write_http_to_buffer (response, &response_buffer);
         if (response_size == -1)
         {
-            ERROR_PRT ("SERVER ERROR: Failed to write HTTP response to buffer\n");
-            return -1;
+            ERROR_PRTF ("SERVER ERROR: Failed to write HTTP response to buffer\n");
+            goto EXIT;
         }
 
         // Send http response to client
         if (write_bytes (client_sock, response_buffer, response_size) == -1)
         {
-            ERROR_PRT ("SERVER ERROR: Failed to send response to client\n");
-            return -1;
+            ERROR_PRTF ("SERVER ERROR: Failed to send response to client\n");
+            free (response_buffer);
+            goto EXIT;
         }
 
         free (response_buffer);
     }
-
     free_http (request);
     free_http (response);
     return 0;
+    EXIT:
+    free_http (request);
+    free_http (response);
+    return -1;
 }

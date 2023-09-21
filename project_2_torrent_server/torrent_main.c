@@ -22,16 +22,13 @@ int main (int argc, char **argv)
         printf ("Invalid port number: %s\n", argv[1]);
         return 1;
     }
-    // update();
     printf ("Initializing torrent engine...\n");
     torrent_engine_t *torrent_engine = init_torrent_engine(port);
 
     while (1)
     {
         char cmd[STR_LEN] = {0};
-        yellow();
-        printf("ENTER COMMAND");
-        reset();
+        YELLOW_PRTF("ENTER COMMAND");
         printf(" (\"help\" for help): ");
         fflush(stdout);
         if (fgets (cmd, STR_LEN, stdin) == NULL)
@@ -63,9 +60,7 @@ int main (int argc, char **argv)
         }
         else if (strncmp (cmd, "status", 7) == 0 && strlen(cmd) == 6)
         {
-            green();
-            printf ("PRINTING ENGINE STATUS:\n");
-            reset();
+            GREEN_PRTF ("PRINTING ENGINE STATUS:\n");
             pthread_mutex_lock (&(torrent_engine->mutex));
             print_engine_status (torrent_engine);
             pthread_mutex_unlock (&(torrent_engine->mutex));
@@ -76,9 +71,7 @@ int main (int argc, char **argv)
             HASH_t hash = str_to_hash (cmd+4);
             if (hash == 0)
             {
-                red();
-                printf ("ADD: INVALID HASH.\n\n");
-                reset();
+                RED_PRTF ("ADD: INVALID HASH.\n\n");
                 continue;
             }
             pthread_mutex_lock (&(torrent_engine->mutex));
@@ -86,9 +79,7 @@ int main (int argc, char **argv)
             pthread_mutex_unlock (&(torrent_engine->mutex));
             if (val == 0)
             {
-                green();
-                printf ("TORRENT 0x%x ADDED.\n\n", hash);
-                reset();
+                GREEN_PRTF ("TORRENT 0x%x ADDED.\n\n", hash);
             }
             else
                 printf ("\n");
@@ -98,9 +89,7 @@ int main (int argc, char **argv)
             HASH_t hash = str_to_hash (cmd+7);
             if (hash == 0)
             {
-                red();
-                printf ("REMOVE: INVALID HASH.\n\n");
-                reset();
+                RED_PRTF ("REMOVE: INVALID HASH.\n\n");
                 continue;
             }
             pthread_mutex_lock (&(torrent_engine->mutex));
@@ -108,9 +97,7 @@ int main (int argc, char **argv)
             pthread_mutex_unlock (&(torrent_engine->mutex));
             if (idx == -1)
             {
-                red();
-                printf ("WATCH: TORRENT 0x%x NOT FOUND.\n\n", hash);
-                reset();
+                RED_PRTF ("WATCH: TORRENT 0x%x NOT FOUND.\n\n", hash);
                 continue;
             }
             pthread_mutex_lock (&(torrent_engine->mutex));
@@ -118,9 +105,7 @@ int main (int argc, char **argv)
             pthread_mutex_unlock (&(torrent_engine->mutex));
             if (val == 0)
             {
-                green();
-                printf ("TORRENT 0x%x REMOVED.\n\n", hash);
-                reset();
+                GREEN_PRTF ("TORRENT 0x%x REMOVED.\n\n", hash);
             }
             else
                 printf ("\n");
@@ -131,9 +116,7 @@ int main (int argc, char **argv)
             char name[STR_LEN] = {0};
             if (sscanf (cmd+7, "%s %s", name, path) != 2)
             {
-                red();
-                printf ("CREATE: INVALID COMMAND.\n\n");
-                reset();
+                RED_PRTF ("CREATE: INVALID COMMAND.\n\n");
                 continue;
             }
             pthread_mutex_lock (&(torrent_engine->mutex));
@@ -143,9 +126,7 @@ int main (int argc, char **argv)
                 printf ("\n");
             else
             {
-                green();
-                printf ("TORRENT 0x%x CREATED.\n\n", hash);
-                reset();
+                GREEN_PRTF ("TORRENT 0x%x CREATED.\n\n", hash);
             }
         }
         else if (strncmp (cmd, "info ", 5) == 0 && strlen(cmd) == 15)
@@ -153,14 +134,10 @@ int main (int argc, char **argv)
             HASH_t hash = str_to_hash (cmd+5);
             if (hash == 0)
             {
-                red();
-                printf ("INFO: INVALID HASH.\n\n");
-                reset();
+                RED_PRTF ("INFO: INVALID HASH.\n\n");
                 continue;
             }
-            green();
-            printf ("PRINTING TORRENT STATUS:\n");
-            reset();
+            GREEN_PRTF ("PRINTING TORRENT STATUS:\n");
             pthread_mutex_lock (&(torrent_engine->mutex));
             print_torrent_status_hash (torrent_engine, hash);
             pthread_mutex_unlock (&(torrent_engine->mutex));
@@ -170,9 +147,7 @@ int main (int argc, char **argv)
             HASH_t hash = str_to_hash (cmd+6);
             if (hash == 0)
             {
-                red();
-                printf ("WATCH: INVALID HASH.\n\n");
-                reset();
+                RED_PRTF ("WATCH: INVALID HASH.\n\n");
                 continue;
             }
             pthread_mutex_lock (&(torrent_engine->mutex));
@@ -183,17 +158,15 @@ int main (int argc, char **argv)
                 printf ("WATCH: TORRENT 0x%x NOT FOUND.\n\n", hash);
                 continue;
             }
-            update();
+            UPDATE();
             size_t last_time = get_time_msec();
             while (kbhit() == 0)
             {
                 if (get_time_msec() > last_time + 100)
                 {
                     last_time = get_time_msec();
-                    gotoxy (0, 0);
-                    green();
-                    printf ("WATCHING TORRENT 0x%x... (Press enter to stop.)\n", hash);
-                    reset();
+                    GOTO_X_Y (0, 0);
+                    GREEN_PRTF ("WATCHING TORRENT 0x%x... (Press enter to stop.)\n", hash);
                     pthread_mutex_lock (&(torrent_engine->mutex));
                     print_torrent_status_hash (torrent_engine, hash);
                     pthread_mutex_unlock (&(torrent_engine->mutex));
@@ -208,25 +181,19 @@ int main (int argc, char **argv)
             HASH_t hash = str_to_hash (cmd+9);
             if (hash == 0)
             {
-                red();
-                printf ("ADD_PEER: INVALID HASH.\n\n");
-                reset();
+                RED_PRTF ("ADD_PEER: INVALID HASH.\n\n");
                 continue;
             }
             int val = check_ipv4 (cmd+20);
             if (val == -1)
             {
-                red();
-                printf ("ADD_PEER: INVALID IP.\n\n");
-                reset();
+                RED_PRTF ("ADD_PEER: INVALID IP.\n\n");
                 continue;
             }
             memcpy (ip, cmd+20, val);
             if (sscanf (cmd+20+val , "%d", &port) != 1 || port < 0 || port > 65535)
             {
-                red();
-                printf ("ADD_PEER: INVALID PORT.\n\n");
-                reset();
+                RED_PRTF ("ADD_PEER: INVALID PORT.\n\n");
                 continue;
             }
             pthread_mutex_lock (&(torrent_engine->mutex));
@@ -234,9 +201,7 @@ int main (int argc, char **argv)
             pthread_mutex_unlock (&(torrent_engine->mutex));
             if (val == 0)
             {
-                green();
-                printf ("PEER %s:%d ADDED to 0x%x.\n\n", ip, port, hash);
-                reset();
+                GREEN_PRTF ("PEER %s:%d ADDED to 0x%x.\n\n", ip, port, hash);
             }
             else
                 printf ("\n");
@@ -248,9 +213,7 @@ int main (int argc, char **argv)
             HASH_t hash = str_to_hash (cmd+12);
             if (hash == 0)
             {
-                red();
-                printf ("REMOVE_PEER: INVALID HASH.\n\n");
-                reset();
+                RED_PRTF ("REMOVE_PEER: INVALID HASH.\n\n");
                 continue;
             }
             pthread_mutex_lock (&(torrent_engine->mutex));
@@ -258,25 +221,19 @@ int main (int argc, char **argv)
             pthread_mutex_unlock (&(torrent_engine->mutex));
             if (idx == -1)
             {
-                red();
-                printf ("WATCH: TORRENT 0x%x NOT FOUND.\n\n", hash);
-                reset();
+                RED_PRTF ("WATCH: TORRENT 0x%x NOT FOUND.\n\n", hash);
                 continue;
             }
             int val = check_ipv4 (cmd+23);
             if (val == -1)
             {
-                red();
-                printf ("REMOVE_PEER: INVALID IP.\n\n");
-                reset();
+                RED_PRTF ("REMOVE_PEER: INVALID IP.\n\n");
                 continue;
             }
             memcpy (ip, cmd+23, val);
             if (sscanf (cmd+23+val, "%d", &port) != 1 || port < 0 || port > 65535)
             {
-                red();
-                printf ("REMOVE_PEER: INVALID PORT.\n\n");
-                reset();
+                RED_PRTF ("REMOVE_PEER: INVALID PORT.\n\n");
                 continue;
             }
             pthread_mutex_lock (&(torrent_engine->mutex));
@@ -284,9 +241,7 @@ int main (int argc, char **argv)
             pthread_mutex_unlock (&(torrent_engine->mutex));
             if (idx == -1)
             {
-                red();
-                printf ("REMOVE_PEER: PEER %s:%d NOT FOUND.\n\n", ip, port);
-                reset();
+                RED_PRTF ("REMOVE_PEER: PEER %s:%d NOT FOUND.\n\n", ip, port);
                 continue;
             }
             pthread_mutex_lock (&(torrent_engine->mutex));
@@ -294,9 +249,7 @@ int main (int argc, char **argv)
             pthread_mutex_unlock (&(torrent_engine->mutex));
             if (val == 0)
             {
-                green();
-                printf ("PEER %s:%d REMOVED from 0x%x.\n\n", ip, port, hash);
-                reset();
+                GREEN_PRTF ("PEER %s:%d REMOVED from 0x%x.\n\n", ip, port, hash);
             }
             else
                 printf ("\n");
@@ -306,14 +259,10 @@ int main (int argc, char **argv)
             int time = 0;
             if (sscanf (cmd+5, "%d", &time) != 1 || time < 0)
             {
-                red();
-                printf ("WAIT: INVALID TIME.\n\n");
-                reset();
+                RED_PRTF ("WAIT: INVALID TIME.\n\n");
                 continue;
             }
-            green();
-            printf ("WAITING %d MILLISECONDS...\n\n", time);
-            reset();
+            GREEN_PRTF ("WAITING %d MILLISECONDS...\n\n", time);
             usleep (time * 1000);
         }
         else if (strncmp(cmd, "quit", 5) == 0)

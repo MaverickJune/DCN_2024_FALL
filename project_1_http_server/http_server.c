@@ -19,14 +19,14 @@ int main (int argc, char **argv)
     int server_port = atoi(argv[1]);
     if (server_port <= 0 || server_port > 65535)
     {
-        ERROR_PRT ("ERROR: Invalid port number: %s\n", argv[1]);
+        ERROR_PRTF ("ERROR: Invalid port number: %s\n", argv[1]);
         return 1;
     }
 
     printf ("Initializing HTTP server...\n");
     if (server_engine_ans (server_port) == -1)
     {
-        ERROR_PRT ("SERVER ERROR: Failed to run server engine\n");
+        ERROR_PRTF ("SERVER ERROR: Failed to run server engine\n");
         return 1;
     }
     return 0;
