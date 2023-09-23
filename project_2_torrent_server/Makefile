@@ -5,8 +5,7 @@
 
 #### DO NOT MODIFY THIS FILE!! ####
 
-
-TARGET=torrent_main
+TARGET=torrent
 OBJECTS=torrent.o torrent_engine.o torrent_ui.o torrent_utils.o
 SAVE_DIR=./torrents
 
@@ -16,18 +15,16 @@ OBJDIR=./obj/
 VPATH=./src/
 DEPS = $(wildcard *.h)
 
-OPTS=-O3
+OPTS=-O0 -g
 LDFLAGS= 
 COMMON= -D SAVE_DIR=\"$(SAVE_DIR)\" -Iinclude/
 CFLAGS= -Wall -Wno-unused-variable
 
 OBJS= $(addprefix $(OBJDIR), $(OBJECTS))
-EXEOBJSA= $(addsuffix .o, $(TARGET))
-EXEOBJS= $(addprefix $(OBJDIR), $(EXEOBJSA))
 
 all: obj $(TARGET) 
  
-$(TARGET): $(EXEOBJS) $(OBJS)
+$(TARGET): $(OBJS)
 	$(CC) $(COMMON) $(CFLAGS) $(OPTS) $^ -o $@ $(LDFLAGS)
 
 $(OBJDIR)%.o: %.c $(DEPS)
@@ -37,4 +34,4 @@ obj:
 	mkdir -p $(OBJDIR)
 
 clean:
-	rm -rf $(TARGET) $(EXEOBJS) $(OBJS) $(OBJDIR) $(SAVE_DIR)
+	rm -rf $(TARGET) $(OBJS) $(OBJDIR) $(SAVE_DIR)

@@ -130,6 +130,15 @@ size_t get_time_msec()
     return (tv.tv_sec * 1000ULL) + (tv.tv_usec/1000ULL);
 }
 
+size_t get_elapsed_msec()
+{
+    static size_t init_time = 0;
+    if (init_time == 0)
+        init_time = get_time_msec();
+    return get_time_msec() - init_time;
+}
+
+
 int get_int_str_len (size_t num)
 {
     int len = 0;

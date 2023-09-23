@@ -31,6 +31,9 @@ int check_ipv4 (char *ip);
 // Get time in milliseconds.
 size_t get_time_msec();
 
+// Get elapsed time in milliseconds.
+size_t get_elapsed_msec();
+
 // Get the size of string from an integer.
 int get_int_str_len (size_t num);
 
@@ -43,9 +46,11 @@ ssize_t read_file (char *path, void *data);
 ssize_t get_file_size (char *path);
 
 // Read size bytes from socket to buffer.
+// Returns the number of bytes read on success, -1 on error.
 ssize_t read_bytes (int socket, char *buffer, size_t size);
 
 // Write size bytes from buffer to socket.
+// Returns the number of bytes written on success, -1 on error.
 ssize_t write_bytes (int socket, char *buffer, size_t size);
 
 // Checks if there is a key press in stdin, with timeout.

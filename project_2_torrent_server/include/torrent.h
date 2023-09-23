@@ -12,9 +12,9 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "unistd.h"
-#include "signal.h"
 #include "stdint.h"
+#include "signal.h"
+#include "unistd.h"
 #include "pthread.h"
 #include "poll.h"
 #include "sys/stat.h"
@@ -22,7 +22,8 @@
 #include "sys/socket.h"
 #include "arpa/inet.h"
 #include "netinet/tcp.h"
-#include "pthread.h"
+
+extern int print_info;
 
 #define UPDATE() printf("\033[H\033[J")
 #define GOTO_X_Y(x, y) printf("\033[%d;%dH", x, y)
@@ -30,9 +31,10 @@
 #define RED_PRTF(...) {printf("\033[0;31m"); printf(__VA_ARGS__); printf("\033[0m");}
 #define GREEN_PRTF(...) {printf("\033[0;32m"); printf(__VA_ARGS__); printf("\033[0m");}
 #define YELLOW_PRTF(...) {printf("\033[0;33m"); printf(__VA_ARGS__); printf("\033[0m");}
-#define ERROR_PRTF(...) {fprintf(stderr, "\033[0;31m"); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\033[0m");}
+#define ERROR_PRTF(...) {fprintf(stderr, "\033[0;31m"); fprintf(stderr, "(%s:%d)", __FILE__, __LINE__); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\033[0m");}
+#define INFO_PRTF(...) {if (print_info){printf("\033[0;34m"); printf(__VA_ARGS__); printf("\033[0m");}}
 
-#define STR_LEN 128
+#define STR_LEN 64
 #define MSG_LEN (STR_LEN*4)
 #define DEFAULT_ARR_MAX_NUM 16
 #define BLOCK_SIZE (32*1024) // 32KiB
@@ -41,7 +43,8 @@
 #define WATCH_UPDATE_MSEC 500
 #define RAND_WAIT_RANGE 30
 #define MAX_QUEUED_CONNECTIONS 16
-#define PRINT_COL_NUM 10
+#define PRINT_COL_NUM 16
+#define PRINT_SKIP_NUM 3
 
 // Hash of value 0 is used to indicate an invalid hash.
 typedef uint32_t HASH_t;
@@ -170,8 +173,9 @@ peer_data_t *init_peer_data (torrent_t *torrent);
 // Returns 0 on success, -1 on error.
 int set_peer_block_info (peer_data_t *peer_data);
 
-// Add peer to torrent. Returns 0 on success, -1 on error.
-int torrent_add_peer (torrent_t *torrent, char *ip, int port);
+// Add peer to torrent. 
+// Returns the added peer index if successful, -1 if error.
+ssize_t torrent_add_peer (torrent_t *torrent, char *ip, int port);
 
 // Remove peer from torrent. Returns 0 on success, -1 on error.
 int torrent_remove_peer (torrent_t *torrent, char *ip, int port);

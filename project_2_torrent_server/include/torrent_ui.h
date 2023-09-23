@@ -25,15 +25,17 @@ void destroy_torrent_engine (torrent_engine_t *engine);
 // Create new torrent from a file. Returns the torrent hash on success, 0 on error.
 HASH_t create_new_torrent (torrent_engine_t *engine, char *torrent_name, char *path);
 
-// Add torrent to engine, using a hash. Returns 0 on success, -1 on error.
-int add_torrent (torrent_engine_t *engine, HASH_t torrent_hash);
+// Add torrent to engine, using a hash. 
+// Returns the added torrent index on success, -1 on error.
+ssize_t add_torrent (torrent_engine_t *engine, HASH_t torrent_hash);
 
 // Remove torrent from engine, using a hash. Returns 0 on success, -1 on error.
 // Returns 0 when the torrent is not found.
 int remove_torrent (torrent_engine_t *engine, HASH_t torrent_hash);
 
-// Add peer to torrent with the given hash. Returns 0 on success, -1 on error.
-int add_peer (torrent_engine_t *engine, HASH_t torrent_hash, char *ip, int port);
+// Add peer to torrent with the given hash. 
+// Returns the added peer index on success, -1 on error.
+ssize_t add_peer (torrent_engine_t *engine, HASH_t torrent_hash, char *ip, int port);
 
 // Remove peer from torrent with the given hash. Returns 0 on success, -1 on error.
 // Returns 0 when the peer is not found.

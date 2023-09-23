@@ -430,7 +430,7 @@ int set_peer_block_info (peer_data_t *peer_data)
     return 0;
 }
 
-int torrent_add_peer (torrent_t *torrent, char *ip, int port)
+ssize_t torrent_add_peer (torrent_t *torrent, char *ip, int port)
 {
     if (torrent == NULL || ip == NULL || port < 0 || port > 65535)
     {
@@ -463,10 +463,11 @@ int torrent_add_peer (torrent_t *torrent, char *ip, int port)
     peer_data->ip[STR_LEN - 1] = '\0';
     peer_data->port = port;
 
-    torrent->peers[torrent->num_peers++] = peer_data;
+    ssize_t peer_idx = torrent->num_peers++;
+    torrent->peers[peer_idx] = peer_data;
     update_if_max_peer_reached (torrent);
 
-    return 0;
+    return peer_idx;
 }
 
 int torrent_remove_peer (torrent_t *torrent, char *ip, int port)
