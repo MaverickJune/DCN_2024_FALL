@@ -35,6 +35,7 @@ int server_engine_ans (int server_port)
     if (bind(server_listening_sock, (struct sockaddr *)&server_addr_info, sizeof(server_addr_info)) == -1)
     {
         ERROR_PRTF ("SERVER ERROR: bind() error\n");
+        close (server_listening_sock);
         return -1;
     }
 
@@ -42,6 +43,7 @@ int server_engine_ans (int server_port)
     if (listen(server_listening_sock, MAX_WAITING_CONNECTIONS) == -1)
     {
         ERROR_PRTF ("SERVER ERROR: listen() error\n");
+        close (server_listening_sock);
         return -1;
     }
 

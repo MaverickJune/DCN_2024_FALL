@@ -16,7 +16,7 @@ int client_init_and_connect_tcp_socket (char *server_ip, int server_port)
     sock = socket(PF_INET, SOCK_STREAM, 0);
     if (sock == -1)
     {
-        printf("socket() error\n");
+        ERROR_PRTF ("ERROR client_init_and_connect_tcp_socket(): socket() failed.\n");
         return -1;
     }
 
@@ -26,7 +26,8 @@ int client_init_and_connect_tcp_socket (char *server_ip, int server_port)
     setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
     if (sock == -1)
     {
-        printf("setsocketopt() SO_REUSEADDR error\n");
+        ERROR_PRTF ("ERROR client_init_and_connect_tcp_socket(): setsockopt() SO_REUSEADDR failed.\n");
+        close (sock);
         return -1;
     }
     // Disable Nagle's algorithm
@@ -36,7 +37,8 @@ int client_init_and_connect_tcp_socket (char *server_ip, int server_port)
     setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
     if (sock == -1)
     {
-        printf("setsockopt() TCP_NODELAY error\n");
+        ERROR_PRTF ("ERROR client_init_and_connect_tcp_socket(): setsockopt() TCP_NODELAY failed.\n");
+        close (sock);
         return -1;
     }
 
@@ -62,10 +64,12 @@ int client_init_and_connect_tcp_socket (char *server_ip, int server_port)
         timeout -= 1.0;
         if (timeout < 0.0)
         {
-            printf("connect() timeout\n");
+            ERROR_PRTF ("ERROR client_init_and_connect_tcp_socket(): Connection to server %s:%d failed.\n", server_ip, server_port);
+            close (sock);
             return -1;
         }
-        printf ("Connection to server %s:%d failed. Retrying... (%d tries)\r", server_ip, server_port, tries++);
+        printf ("Connection to server %s:%d failed.", server_ip, server_port);
+        printf (" Retrying... (%d tries)\r", tries++);
         fflush(stdout);
         is_connected = connect(sock, (struct sockaddr *)&server_addr_info, sizeof(server_addr_info));
         if (is_connected == 0)
@@ -93,7 +97,8 @@ int server_init_tcp_socket (int server_port)
     setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
     if (sock == -1)
     {
-        printf("setsocketopt() SO_REUSEADDR error\n");
+        ERROR_PRTF ("ERROR server_init_tcp_socket(): setsockopt() SO_REUSEADDR failed.\n");
+        close (sock);
         return -1;
     }
     // Disable Nagle's algorithm
@@ -103,7 +108,8 @@ int server_init_tcp_socket (int server_port)
     setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
     if (sock == -1)
     {
-        printf("setsockopt() TCP_NODELAY error\n");
+        ERROR_PRTF ("ERROR server_init_tcp_socket(): setsockopt() TCP_NODELAY failed.\n");
+        close (sock);
         return -1;
     }
 
@@ -120,7 +126,8 @@ int server_init_tcp_socket (int server_port)
     // Bind server_addr_info to socket (i.e., assign server_addr_info to our socket)
     if (bind(sock, (struct sockaddr *)&server_addr_info, sizeof(server_addr_info)) == -1)
     {
-        printf("bind() error\n");
+        ERROR_PRTF ("ERROR server_init_tcp_socket(): bind() failed.\n");
+        close (sock);
         return -1;
     }
 
@@ -128,7 +135,8 @@ int server_init_tcp_socket (int server_port)
     // The second argument is the maximum number of connections that can be queued before the system starts rejecting incoming connections.
     if (listen(sock, 5) == -1)
     {
-        printf("listen() error\n");
+        ERROR_PRTF ("ERROR server_init_tcp_socket(): listen() failed.\n");
+        close (sock);
         return -1;
     }
 
@@ -150,7 +158,7 @@ int server_accept_tcp_socket (int sock)
     // If there are no pending connections, accept() blocks the execution of the program until a connection is established
     client_sock = accept(sock, (struct sockaddr *)&client_addr_info, &client_addr_info_len);
     if (client_sock == -1)
-        printf("accept() error\n");
+        ERROR_PRTF ("ERROR server_accept_tcp_socket(): accept() failed.\n");
 
     // Print the IP address and port number of the client
     printf("Client %s:%d connected\n", inet_ntoa(client_addr_info.sin_addr), ntohs(client_addr_info.sin_port));

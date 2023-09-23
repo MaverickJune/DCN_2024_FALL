@@ -13,6 +13,11 @@
 #include "arpa/inet.h"
 #include "netinet/tcp.h"
 
+#define RED_PRTF(...) {printf("\033[0;31m"); printf(__VA_ARGS__); printf("\033[0m");}
+#define GREEN_PRTF(...) {printf("\033[0;32m"); printf(__VA_ARGS__); printf("\033[0m");}
+#define YELLOW_PRTF(...) {printf("\033[0;33m"); printf(__VA_ARGS__); printf("\033[0m");}
+#define ERROR_PRTF(...) {fprintf(stderr, "\033[0;31m"); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\033[0m");}
+
 // Client side TCP socket initialization & connection function.
 int client_init_and_connect_tcp_socket (char *server_ip, int server_port);
 // Server side TCP socket initialization function.

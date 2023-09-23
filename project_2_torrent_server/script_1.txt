@@ -1,0 +1,3 @@
+create NXC_Lab_intro.pdf NXC_Lab_intro.pdf
+create snu_logo.png snu_logo.png
+watch

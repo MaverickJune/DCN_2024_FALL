@@ -2,20 +2,23 @@
 # Written by Jongseok Park (cakeng@snu.ac.kr)
 # 2023. 9. 19
 
+
 #### DO NOT MODIFY THIS FILE!! ####
 
+
 TARGET=torrent_main
-OBJECTS=torrent_util.o torrent_engine.o
+OBJECTS=torrent.o torrent_engine.o torrent_ui.o torrent_utils.o
+SAVE_DIR=./torrents
 
 CC=gcc
 
 OBJDIR=./obj/
-VPATH=.
+VPATH=./src/
 DEPS = $(wildcard *.h)
 
 OPTS=-O3
-LDFLAGS=
-COMMON= 
+LDFLAGS= 
+COMMON= -D SAVE_DIR=\"$(SAVE_DIR)\" -Iinclude/
 CFLAGS= -Wall -Wno-unused-variable
 
 OBJS= $(addprefix $(OBJDIR), $(OBJECTS))
@@ -34,4 +37,4 @@ obj:
 	mkdir -p $(OBJDIR)
 
 clean:
-	rm -rf $(TARGET) $(EXEOBJS) $(OBJS) $(OBJDIR)
+	rm -rf $(TARGET) $(EXEOBJS) $(OBJS) $(OBJDIR) $(SAVE_DIR)

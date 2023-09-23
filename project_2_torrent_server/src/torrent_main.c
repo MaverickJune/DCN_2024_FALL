@@ -5,7 +5,11 @@
 
 ///// DO NOT MODIFY THIS FILE!! ////
 
-#include "torrent_functions.h"
+
+#include "torrent.h"
+#include "torrent_ui.h"
+#include "torrent_utils.h"
+
 
 int main (int argc, char **argv)
 {
@@ -41,6 +45,9 @@ int main (int argc, char **argv)
             printf ("COMMANDS:\n");
             printf ("\thelp:\n\t\tShow this help message.\n");
             printf ("\tstatus:\n\t\tShow the engine status.\n");
+            printf ("\twatch:\n\t\tWatch the torrent engine status. Updates every %dms.\n", WATCH_UPDATE_MSEC);
+            printf ("\twait [TIME]:\n\t\tWait for [TIME] milliseconds.\n");
+            printf ("\tquit:\n\t\tQuit the program.\n\n");
             printf ("\tadd [HASH]:\n\t\tAdd torrent with [HASH].\n");
             printf ("\t\tex) add 0x12345678\n");
             printf ("\tremove [HASH]:\n\t\tRemove torrent with [HASH].\n");
@@ -49,14 +56,12 @@ int main (int argc, char **argv)
             printf ("\t\tex) create my_music music.mp3\n");
             printf ("\tinfo [HASH]:\n\t\tShow information of torrent with [HASH].\n");
             printf ("\t\tex) info 0x12345678\n");
-            printf ("\twatch [HASH]:\n\t\tWatch the information of torrent with [HASH]. Updates every 0.1ms.\n");
+            printf ("\twatch [HASH]:\n\t\tWatch the information of torrent with [HASH]. Updates every %dms.\n", WATCH_UPDATE_MSEC);
             printf ("\t\tex) watch 0x12345678\n");
             printf ("\tadd_peer [HASH] [IP] [PORT]:\n\t\tAdd peer with [IP] and [PORT] to torrent with [HASH].\n");
             printf ("\t\tex) add_peer 0x12345678 123:123:123:123 12345\n");
             printf ("\tremove_peer [HASH] [IP] [PORT]:\n\t\tRemove peer with [IP] and [PORT] from torrent with [HASH].\n");
-            printf ("\t\tex) remove_peer 0x12345678 123:123:123:123 12345\n");
-            printf ("\twait [TIME]:\n\t\tWait for [TIME] milliseconds.\n");
-            printf ("\tquit:\n\t\tQuit the program.\n\n");
+            printf ("\t\tex) remove_peer 0x12345678 123:123:123:123 12345\n\n");
         }
         else if (strncmp (cmd, "status", 7) == 0 && strlen(cmd) == 6)
         {
@@ -79,7 +84,7 @@ int main (int argc, char **argv)
             pthread_mutex_unlock (&(torrent_engine->mutex));
             if (val == 0)
             {
-                GREEN_PRTF ("TORRENT 0x%x ADDED.\n\n", hash);
+                GREEN_PRTF ("TORRENT 0x%08x ADDED.\n\n", hash);
             }
             else
                 printf ("\n");
@@ -97,7 +102,7 @@ int main (int argc, char **argv)
             pthread_mutex_unlock (&(torrent_engine->mutex));
             if (idx == -1)
             {
-                RED_PRTF ("WATCH: TORRENT 0x%x NOT FOUND.\n\n", hash);
+                RED_PRTF ("WATCH: TORRENT 0x%08x NOT FOUND.\n\n", hash);
                 continue;
             }
             pthread_mutex_lock (&(torrent_engine->mutex));
@@ -105,7 +110,7 @@ int main (int argc, char **argv)
             pthread_mutex_unlock (&(torrent_engine->mutex));
             if (val == 0)
             {
-                GREEN_PRTF ("TORRENT 0x%x REMOVED.\n\n", hash);
+                GREEN_PRTF ("TORRENT 0x%08x REMOVED.\n\n", hash);
             }
             else
                 printf ("\n");
@@ -126,7 +131,7 @@ int main (int argc, char **argv)
                 printf ("\n");
             else
             {
-                GREEN_PRTF ("TORRENT 0x%x CREATED.\n\n", hash);
+                GREEN_PRTF ("TORRENT 0x%08x (%s) CREATED.\n\n", hash, name);
             }
         }
         else if (strncmp (cmd, "info ", 5) == 0 && strlen(cmd) == 15)
@@ -142,6 +147,31 @@ int main (int argc, char **argv)
             print_torrent_status_hash (torrent_engine, hash);
             pthread_mutex_unlock (&(torrent_engine->mutex));
         }
+        else if (strncmp (cmd, "watch", 5) == 0 && strlen(cmd) < 6)
+        {
+            UPDATE();
+            size_t last_time = get_time_msec();
+            int dots = 0;
+            while (kbhit() == 0)
+            {
+                if (get_time_msec() > last_time + WATCH_UPDATE_MSEC)
+                {
+                    last_time = get_time_msec();
+                    GOTO_X_Y (0, 0);
+                    YELLOW_PRTF ("WATCHING TORRENT ENGINE")
+                    for (int i = 0; i < dots; i++)
+                        printf (".");
+                    for (int i = 0; i < 4 - dots; i++)
+                        printf (" ");
+                    dots = (dots + 1) % 4;
+                    printf (" (Press enter to stop.)\n");
+                    pthread_mutex_lock (&(torrent_engine->mutex));
+                    print_engine_status (torrent_engine);
+                    pthread_mutex_unlock (&(torrent_engine->mutex));
+                }
+            }
+            while (getchar() != '\n');
+        }
         else if (strncmp (cmd, "watch ", 6) == 0 && strlen(cmd) == 16)
         {
             HASH_t hash = str_to_hash (cmd+6);
@@ -155,18 +185,25 @@ int main (int argc, char **argv)
             pthread_mutex_unlock (&(torrent_engine->mutex));
             if (idx == -1)
             {
-                printf ("WATCH: TORRENT 0x%x NOT FOUND.\n\n", hash);
+                printf ("WATCH: TORRENT 0x%08x NOT FOUND.\n\n", hash);
                 continue;
             }
             UPDATE();
             size_t last_time = get_time_msec();
+            int dots = 0;
             while (kbhit() == 0)
             {
-                if (get_time_msec() > last_time + 100)
+                if (get_time_msec() > last_time + WATCH_UPDATE_MSEC)
                 {
                     last_time = get_time_msec();
                     GOTO_X_Y (0, 0);
-                    GREEN_PRTF ("WATCHING TORRENT 0x%x... (Press enter to stop.)\n", hash);
+                    YELLOW_PRTF ("WATCHING TORRENT 0x%08x", hash);
+                    for (int i = 0; i < dots; i++)
+                        printf (".");
+                    for (int i = 0; i < 4 - dots; i++)
+                        printf (" ");
+                    dots = (dots + 1) % 4;
+                    printf (" (Press enter to stop.)\n");
                     pthread_mutex_lock (&(torrent_engine->mutex));
                     print_torrent_status_hash (torrent_engine, hash);
                     pthread_mutex_unlock (&(torrent_engine->mutex));
@@ -201,7 +238,7 @@ int main (int argc, char **argv)
             pthread_mutex_unlock (&(torrent_engine->mutex));
             if (val == 0)
             {
-                GREEN_PRTF ("PEER %s:%d ADDED to 0x%x.\n\n", ip, port, hash);
+                GREEN_PRTF ("PEER %s:%d ADDED to 0x%08x.\n\n", ip, port, hash);
             }
             else
                 printf ("\n");
@@ -221,7 +258,7 @@ int main (int argc, char **argv)
             pthread_mutex_unlock (&(torrent_engine->mutex));
             if (idx == -1)
             {
-                RED_PRTF ("WATCH: TORRENT 0x%x NOT FOUND.\n\n", hash);
+                RED_PRTF ("WATCH: TORRENT 0x%08x NOT FOUND.\n\n", hash);
                 continue;
             }
             int val = check_ipv4 (cmd+23);
@@ -249,7 +286,7 @@ int main (int argc, char **argv)
             pthread_mutex_unlock (&(torrent_engine->mutex));
             if (val == 0)
             {
-                GREEN_PRTF ("PEER %s:%d REMOVED from 0x%x.\n\n", ip, port, hash);
+                GREEN_PRTF ("PEER %s:%d REMOVED from 0x%08x.\n\n", ip, port, hash);
             }
             else
                 printf ("\n");

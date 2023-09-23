@@ -35,7 +35,7 @@ int server_routine (int server_port)
     int server_listening_sock = server_init_tcp_socket(server_port);
     if (server_listening_sock == -1)
     {
-        printf("Error: Failed to initialize server socket\n");
+        ERROR_PRTF ("ERROR server_routine(): server_init_tcp_socket() failed.\n");
         return -1;
     }
 
@@ -43,7 +43,7 @@ int server_routine (int server_port)
     int client_connected_sock = server_accept_tcp_socket(server_listening_sock);
     if (client_connected_sock == -1)
     {
-        printf("Error: Failed to accept incoming connection\n");
+        ERROR_PRTF ("ERROR server_routine(): server_accept_tcp_socket() failed.\n");
         return -1;
     }
 
@@ -60,12 +60,12 @@ int server_routine (int server_port)
         bytes_received = read(client_connected_sock, msg_buffer, MAX_ECHO_MSG_SIZE);
         if (bytes_received == -1)
         {
-            printf("Error: Failed to receive message from client\n");
+            ERROR_PRTF ("ERROR server_routine(): read() failed.\n");
             return -1;
         }
         else if (bytes_received == 0)
         {
-            printf("Client disconnected.\n");
+            ERROR_PRTF ("ERROR server_routine(): Client disconnected.\n");
             break; // Break out of while loop
         }
         msg_buffer[MAX_ECHO_MSG_SIZE - 1] = '\0'; // Make sure msg_buffer is null-terminated.
@@ -81,7 +81,7 @@ int server_routine (int server_port)
         ssize_t bytes_sent = write(client_connected_sock, msg_buffer, MAX_ECHO_MSG_SIZE);
         if (bytes_sent == -1)
         {
-            printf("Error: Failed to send message back to client\n");
+            ERROR_PRTF ("ERROR server_routine(): write() failed.\n");
             return -1;
         }
     }
@@ -100,7 +100,7 @@ int client_routine (char *server_ip, int server_port)
     int client_sock = client_init_and_connect_tcp_socket (server_ip, server_port);
     if (client_sock == -1)
     {
-        printf("Error: Failed to initialize client socket\n");
+        ERROR_PRTF ("ERROR client_routine(): client_init_and_connect_tcp_socket() failed.\n");
         return -1;
     }
 
@@ -125,7 +125,7 @@ int client_routine (char *server_ip, int server_port)
         ssize_t bytes_sent = write(client_sock, msg_buffer, MAX_ECHO_MSG_SIZE);
         if (bytes_sent == -1)
         {
-            printf("Error: Failed to send message to server\n");
+            ERROR_PRTF ("ERROR client_routine(): write() failed.\n");
             return -1;
         }
 
@@ -134,12 +134,12 @@ int client_routine (char *server_ip, int server_port)
         bytes_received = read(client_sock, msg_buffer, MAX_ECHO_MSG_SIZE);
         if (bytes_received == -1)
         {
-            printf("Error: Failed to receive message from server\n");
+            ERROR_PRTF ("ERROR client_routine(): read() failed.\n");
             return -1;
         }
         else if (bytes_received == 0)
         {
-            printf("Server disconnected.\n");
+            ERROR_PRTF ("ERROR client_routine(): Server disconnected.\n");
             break; // Break out of while loop
         }
         msg_buffer[MAX_ECHO_MSG_SIZE - 1] = '\0'; // Make sure msg_buffer is null-terminated.
@@ -178,7 +178,7 @@ int main (int argc, char **argv)
         program_mode = CLIENT_MODE;
     else
     {
-        printf("Error: Invalid program_mode: %s\n", program_mode_str);
+        ERROR_PRTF ("ERROR main(): Invalid program_mode_str.\n");
         return 1;
     }
 
@@ -191,7 +191,7 @@ int main (int argc, char **argv)
 
     if (ret != 0)
     {
-        printf("Error: Failed to run %s routine\n", program_mode_str);
+        ERROR_PRTF ("ERROR main(): server_routine() or client_routine() failed.\n");
         return 1;
     }
     return 0;
