@@ -317,8 +317,8 @@ void print_peer_status (peer_data_t *peer)
 {
     if (peer == NULL)
         return;
-    printf ("\t\t\tIP: %s, PORT: %d, NUM REQUESTS: %ld\n", 
-        peer->ip, peer->port, peer->num_requests);
+    printf ("\t\t\tIP: %s, PORT: %d, NUM REQUESTS: %ld/%d\n", 
+        peer->ip, peer->port, peer->num_requests, PEER_EVICT_REQUEST_NUM);
     if (peer->torrent->num_blocks != 0)
     {
         printf ("\t\t\tPEER BLOCK STATUS:");

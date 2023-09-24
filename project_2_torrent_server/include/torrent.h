@@ -41,6 +41,12 @@ extern int print_info;
 #define HASH_SEED 0x12345678
 #define TIMEOUT_MSEC 30
 #define WATCH_UPDATE_MSEC 500
+#define REQUEST_TORRENT_INFO_INTERVAL_MSEC 500
+#define REQUEST_PEER_LIST_INTERVAL_MSEC 5000
+#define REQUEST_BLOCK_STATUS_INTERVAL_MSEC 1500
+#define REQUEST_BLOCK_INTERVAL_MSEC 150
+#define PEER_EVICT_REQUEST_NUM 50
+#define PEER_LIST_BYTE_PER_PEER 21 // [PEER_X_IP]:[PEER_X_PORT] = "xxx.xxx.xxx.xxx:xxxxx "
 #define RAND_WAIT_RANGE 30
 #define MAX_QUEUED_CONNECTIONS 16
 #define PRINT_COL_NUM 16
@@ -59,7 +65,12 @@ struct peer_data
     torrent_t *torrent;
     char ip[STR_LEN];
     int port;
-    size_t num_requests;
+    // Number of requests sent to the peer. Cleared when the peer sends a push message.
+    size_t num_requests; 
+    size_t last_torrent_info_request_msec;
+    size_t last_peer_list_request_msec;
+    size_t last_block_status_request_msec;
+    size_t last_block_request_msec;
     uint8_t *block_status;
 
 };

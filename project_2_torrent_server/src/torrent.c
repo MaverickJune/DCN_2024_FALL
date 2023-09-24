@@ -226,7 +226,8 @@ int save_torrent_as_file (torrent_t *torrent)
     }
 
     strcat (path, torrent->torrent_name);
-    printf ("Saving torrent to %s\n", path);
+    INFO_PRTF ("\tINFO [%04.3fs] SAVING 0x%08x TO %s.\n", (double)get_elapsed_msec()/1000, 
+            torrent->torrent_hash, path);
     FILE *fp = fopen (path, "wb");
     if (fp == NULL)
     {
@@ -395,6 +396,10 @@ peer_data_t *init_peer_data (torrent_t *torrent)
     memset (peer_data->ip, 0, STR_LEN);
     peer_data->port = -1;
     peer_data->num_requests = 0;
+    peer_data->last_torrent_info_request_msec = 0;
+    peer_data->last_peer_list_request_msec = 0;
+    peer_data->last_block_status_request_msec = 0;
+    peer_data->last_block_request_msec = 0;
     peer_data->block_status = NULL;
     return peer_data;
 }

@@ -16,20 +16,22 @@
 // The implementations for below functions are provided as a reference for the project.
 
 // Request torrent info from a remote host. Returns 0 on success, -1 on error.
-// Message protocol: "REQUEST_TORRENT_INFO [MY_LISTEN_PORT] [TORRENT_HASH]"
+// Message protocol: "REQUEST_TORRENT_INFO [MY_ENGINE_HASH] [MY_LISTEN_PORT] [TORRENT_HASH]"
 int request_torrent_info (peer_data_t *peer, torrent_t *torrent);
 
 // Push torrent INFO to peer. Returns 0 on success, -1 on error.
-// Message protocol: "PUSH_TORRENT_INFO [MY_LISTEN_PORT] [TORRENT_HASH] [TORRENT_NAME] [FILE_SIZE]"
+// Message protocol: 
+// "PUSH_TORRENT_INFO [MY_ENGINE_HASH] [MY_LISTEN_PORT] [TORRENT_HASH] [TORRENT_NAME] [FILE_SIZE]" [BLOCK_HASH]
+// [BLOCK_HASH] is a binary dump of the torrent's block hashes.
 int push_torrent_info (peer_data_t *peer, torrent_t *torrent);
 
 // Handle a request for torrent info, using push_torrent_info()
 // Returns 0 on success, -1 on error.
-int handle_request_torrent_info (torrent_engine_t *engine, char *msg, char *peer_ip, int peer_sock);
+int handle_request_torrent_info (torrent_engine_t *engine, int peer_sock, peer_data_t *peer, torrent_t *torrent, char *msg_body);
 
 // Handle a push of torrent info.
 // Returns 0 on success, -1 on error.
-int handle_push_torrent_info (torrent_engine_t *engine, char *msg, char *peer_ip, int peer_sock);
+int handle_push_torrent_info (torrent_engine_t *engine, int peer_sock, peer_data_t *peer, torrent_t *torrent, char *msg_body);
 
 
 //// TODO: IMPLEMENT THE FOLLOWING FUNCTIONS IN torrent_engine.c ////
@@ -85,26 +87,26 @@ int push_torrent_block (peer_data_t *peer, torrent_t *torrent, size_t block_inde
 
 // Handle a request for peer list, using push_torrent_peer_list()
 // Returns 0 on success, -1 on error.
-int handle_request_torrent_peer_list (torrent_engine_t *engine, char *msg, char *peer_ip, int peer_sock);
+int handle_request_torrent_peer_list (torrent_engine_t *engine, int peer_sock, peer_data_t *peer, torrent_t *torrent, char *msg_body);
 
 // Handle a request for block info, using push_torrent_block_status()
 // Returns 0 on success, -1 on error.
-int handle_request_torrent_block_status (torrent_engine_t *engine, char *msg, char *peer_ip, int peer_sock);
+int handle_request_torrent_block_status (torrent_engine_t *engine, int peer_sock, peer_data_t *peer, torrent_t *torrent, char *msg_body);
 
 // Handle a request for block, using push_torrent_block()
 // Returns 0 on success, -1 on error.
-int handle_request_torrent_block (torrent_engine_t *engine, char *msg, char *peer_ip, int peer_sock);
+int handle_request_torrent_block (torrent_engine_t *engine, int peer_sock, peer_data_t *peer, torrent_t *torrent, char *msg_body);
 
 // Handle a push of peer list.
 // Returns 0 on success, -1 on error.
-int handle_push_torrent_peer_list (torrent_engine_t *engine, char *msg, char *peer_ip, int peer_sock);
+int handle_push_torrent_peer_list (torrent_engine_t *engine, int peer_sock, peer_data_t *peer, torrent_t *torrent, char *msg_body);
 
 // Handle a push of block status.
 // Returns 0 on success, -1 on error.
-int handle_push_torrent_block_status (torrent_engine_t *engine, char *msg, char *peer_ip, int peer_sock);
+int handle_push_torrent_block_status (torrent_engine_t *engine, int peer_sock, peer_data_t *peer, torrent_t *torrent, char *msg_body);
 
 // Handle a push of block.
 // Returns 0 on success, -1 on error.
-int handle_push_torrent_block (torrent_engine_t *engine, char *msg, char *peer_ip, int peer_sock);
+int handle_push_torrent_block (torrent_engine_t *engine, int peer_sock, peer_data_t *peer, torrent_t *torrent, char *msg_body);
 
 #endif // TORRENT_ENGINE_H
