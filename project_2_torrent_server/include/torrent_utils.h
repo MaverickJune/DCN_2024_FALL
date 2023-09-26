@@ -47,11 +47,11 @@ ssize_t get_file_size (char *path);
 
 // Read size bytes from socket to buffer.
 // Returns the number of bytes read on success, -1 on error.
-ssize_t read_bytes (int socket, char *buffer, size_t size);
+ssize_t read_bytes (int socket, void *buffer, size_t size);
 
 // Write size bytes from buffer to socket.
 // Returns the number of bytes written on success, -1 on error.
-ssize_t write_bytes (int socket, char *buffer, size_t size);
+ssize_t write_bytes (int socket, void *buffer, size_t size);
 
 // Checks if there is a key press in stdin, with timeout.
 // Returns 1 if there is a key press, 0 if else.

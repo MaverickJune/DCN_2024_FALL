@@ -127,10 +127,10 @@ char *base64_encode(char *data, size_t input_length) ;
 char *copy_string (char *string);
 
 // Write size bytes from buffer to socket.
-ssize_t write_bytes (int socket, char *buffer, size_t size);
+ssize_t write_bytes (int socket, void *buffer, size_t size);
 
 // Read size bytes from socket to buffer.
-ssize_t read_bytes (int socket, char *buffer, size_t size);
+ssize_t read_bytes (int socket, void *buffer, size_t size);
 
 // Read a file and return its contents.
 // Returns the size read if successful, -1 if not.

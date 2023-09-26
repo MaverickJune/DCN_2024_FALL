@@ -39,15 +39,16 @@ extern int print_info;
 #define DEFAULT_ARR_MAX_NUM 16
 #define BLOCK_SIZE (32*1024) // 32KiB
 #define HASH_SEED 0x12345678
-#define TIMEOUT_MSEC 30
+#define TIMEOUT_MSEC 50
 #define WATCH_UPDATE_MSEC 500
-#define REQUEST_TORRENT_INFO_INTERVAL_MSEC 500
-#define REQUEST_PEER_LIST_INTERVAL_MSEC 5000
-#define REQUEST_BLOCK_STATUS_INTERVAL_MSEC 1500
-#define REQUEST_BLOCK_INTERVAL_MSEC 150
+#define REQUEST_TORRENT_INFO_INTERVAL_MSEC 1000
+#define REQUEST_PEER_LIST_INTERVAL_MSEC 2000
+#define REQUEST_BLOCK_STATUS_INTERVAL_MSEC 1000
+#define REQUEST_BLOCK_INTERVAL_MSEC 200
+#define RESET_BLOCK_STATUS_INTERVAL_MSEC 5000
 #define PEER_EVICT_REQUEST_NUM 50
-#define PEER_LIST_BYTE_PER_PEER 21 // [PEER_X_IP]:[PEER_X_PORT] = "xxx.xxx.xxx.xxx:xxxxx "
-#define RAND_WAIT_RANGE 30
+#define PEER_LIST_MAX_BYTE_PER_PEER 21 // [PEER_X_IP]:[PEER_X_PORT] = "xxx.xxx.xxx.xxx:xxxxx "
+#define RAND_WAIT_RANGE 60
 #define MAX_QUEUED_CONNECTIONS 16
 #define PRINT_COL_NUM 16
 #define PRINT_SKIP_NUM 3
@@ -58,6 +59,13 @@ typedef struct torrent torrent_t;
 typedef struct torrent_engine torrent_engine_t;
 typedef struct peer_data peer_data_t;
 
+typedef enum B_STAT
+{
+    B_ERROR = -1,
+    B_MISSING = 0,
+    B_REQUESTED = 1,
+    B_COMPLETED = 2
+} B_STAT;
 
 // Struct for managing individual peers.
 struct peer_data
@@ -71,7 +79,8 @@ struct peer_data
     size_t last_peer_list_request_msec;
     size_t last_block_status_request_msec;
     size_t last_block_request_msec;
-    uint8_t *block_status;
+    size_t last_block_status_reset_msec;
+    B_STAT *block_status;
 
 };
 
@@ -89,7 +98,7 @@ struct torrent
     
     size_t num_blocks;
     HASH_t *block_hashes;
-    char *block_status;
+    B_STAT *block_status;
 
     size_t num_peers;
     size_t max_num_peers;
@@ -150,17 +159,21 @@ ssize_t find_torrent (torrent_engine_t *engine, HASH_t torrent_hash);
 // Returns the torrent index if found, -1 if not found.
 ssize_t find_torrent_name (torrent_engine_t *engine, char* name);
 
+// Get the status of a block with the given index.
+// Returns the status if successful, B_ERROR if error.
+B_STAT get_block_status (torrent_t *torrent, size_t block_index);
+
 // Get the number of completed blocks.
 // Returns the number of completed blocks if successful, -1 if error.
 ssize_t get_num_completed_blocks (torrent_t *torrent);
 
-// Find the index of first block that is missing after start_idx.
-// Returns the block index if found, -1 if not found.
+// Find the index of first block that is missing, starting from start_idx.
+// Returns the block index if found, -1 if not found, -2 if error.
 ssize_t get_missing_block (torrent_t *torrent, size_t start_idx);
 
 // Get the status of a peer block with the given index.
-// Returns the status if successful, -1 if error.
-char get_peer_block_status (peer_data_t *peer, size_t block_index);
+// Returns the status if successful, B_ERROR if error.
+B_STAT get_peer_block_status (peer_data_t *peer, size_t block_index);
 
 // Get the number of completed blocks from a peer.
 // Returns the number of completed blocks if successful, -1 if error.

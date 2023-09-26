@@ -702,7 +702,7 @@ char *copy_string (char *string)
     return copy;
 }
 
-ssize_t write_bytes (int socket, char *buffer, size_t size)
+ssize_t write_bytes (int socket, void *buffer, size_t size)
 {
     ssize_t bytes_sent = 0;
     ssize_t bytes_remaining = size;
@@ -721,7 +721,7 @@ ssize_t write_bytes (int socket, char *buffer, size_t size)
     return size;
 }
 
-ssize_t read_bytes (int socket, char *buffer, size_t size)
+ssize_t read_bytes (int socket, void *buffer, size_t size)
 {
     ssize_t bytes_received = 0;
     ssize_t bytes_remaining = size;

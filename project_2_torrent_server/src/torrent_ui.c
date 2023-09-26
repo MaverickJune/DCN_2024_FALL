@@ -83,6 +83,8 @@ void destroy_torrent_engine (torrent_engine_t *engine)
             destroy_torrent (engine->torrents[i]);
         free (engine->torrents);
     }
+    if (engine->listen_sock != -1)
+        close (engine->listen_sock);
     pthread_mutex_destroy (&engine->mutex);
     free (engine);
 }
@@ -276,7 +278,7 @@ void print_torrent_status (torrent_t *torrent)
             {
             if (i % PRINT_COL_NUM == 0)
                 YELLOW_PRTF ("\n\t\t\t%*ld ", leading_space_num, i);
-            printf ("%*d ", leading_space_num, torrent->block_status[i]);
+            printf ("%*d ", leading_space_num, get_block_status (torrent, i));
             }
             else
                 if (skip_flag == 0)
@@ -332,7 +334,7 @@ void print_peer_status (peer_data_t *peer)
             {
             if (i % PRINT_COL_NUM == 0)
                 YELLOW_PRTF ("\n\t\t\t%*ld ", leading_space_num, i);
-            printf ("%*d ", leading_space_num, peer->block_status[i]);
+            printf ("%*d ", leading_space_num, get_peer_block_status (peer, i));
             }
             else
                 if (skip_flag == 0)
@@ -390,7 +392,7 @@ int main (int argc, char **argv)
             printf ("\t\tex) add 0x12345678\n");
             printf ("\tremove [IDX]:\n\t\tRemove torrent of index [IDX].\n");
             printf ("\t\tex) remove 0x12345678\n");
-            printf ("\tinfo [IDX]:\n\t\tShow information of torrent of index [IDX].\n");
+            printf ("\t[IDX]:\n\t\tShow information of torrent of index [IDX].\n");
             printf ("\t\tex) info 0x12345678\n");
             printf ("\twatch [IDX]:\n\t\tWatch the information of torrent of index [IDX]. Updates every %dms.\n", WATCH_UPDATE_MSEC);
             printf ("\t\tex) watch 0x12345678\n");
@@ -409,7 +411,6 @@ int main (int argc, char **argv)
         }
         else if (strncmp (cmd, "watch", 5) == 0 && strlen(cmd) < 6)
         {
-            UPDATE();
             size_t last_time = get_time_msec();
             int dots = 0;
             while (kbhit() == 0)
@@ -417,6 +418,7 @@ int main (int argc, char **argv)
                 if (get_time_msec() > last_time + WATCH_UPDATE_MSEC)
                 {
                     last_time = get_time_msec();
+                    UPDATE();
                     GOTO_X_Y (0, 0);
                     GREEN_PRTF ("WATCHING TORRENT");
                     printf (" ENGINE");
@@ -426,9 +428,7 @@ int main (int argc, char **argv)
                         printf (" ");
                     dots = (dots + 1) % 4;
                     printf (" (Press ENTER to stop.)\n");
-                    pthread_mutex_lock (&(torrent_engine->mutex));
                     print_engine_status (torrent_engine);
-                    pthread_mutex_unlock (&(torrent_engine->mutex));
                 }
             }
             while (getchar() != '\n');
@@ -550,6 +550,7 @@ int main (int argc, char **argv)
                 if (get_time_msec() > last_time + WATCH_UPDATE_MSEC)
                 {
                     last_time = get_time_msec();
+                    UPDATE();
                     GOTO_X_Y (0, 0);
                     GREEN_PRTF ("WATCHING TORRENT");
                     printf (" 0x%08x", hash);
@@ -559,16 +560,16 @@ int main (int argc, char **argv)
                         printf (" ");
                     dots = (dots + 1) % 4;
                     printf (" (Press ENTER to stop.)\n");
-                    pthread_mutex_lock (&(torrent_engine->mutex));
                     print_torrent_status_hash (torrent_engine, hash);
-                    pthread_mutex_unlock (&(torrent_engine->mutex));
                 }
             }
             while (getchar() != '\n');
         }
         else if (strncmp (cmd, "add_peer ", 9) == 0)
         {
-            char *val = strtok (cmd+9, " ");
+            printf ("COMMAND: %s\n", cmd);
+            char *val = strtok (cmd, " ");
+            val = strtok (NULL, " ");
             ssize_t idx = strtoll (val, NULL, 0);
             pthread_mutex_lock (&(torrent_engine->mutex));
             if (idx == 0 || idx >= torrent_engine->num_torrents)
@@ -584,7 +585,7 @@ int main (int argc, char **argv)
             int ret = check_ipv4 (val);
             if (ret == -1)
             {
-                RED_PRTF ("ADD_PEER: INVALID IP.\n\n");
+                RED_PRTF ("ADD_PEER: INVALID IP - %s.\n\n", val);
                 continue;
             }
             char *ip = val;
@@ -609,12 +610,13 @@ int main (int argc, char **argv)
         }
         else if (strncmp (cmd, "remove_peer ", 12) == 0)
         {
-            char *val = strtok (cmd+12, " ");
+            char *val = strtok (cmd, " ");
+            val = strtok (NULL, " ");
             ssize_t idx = strtoll (val, NULL, 0);
             pthread_mutex_lock (&(torrent_engine->mutex));
             if (idx == 0 || idx >= torrent_engine->num_torrents)
             {
-                RED_PRTF ("ADD_PEER: INVALID INDEX.\n\n");
+                RED_PRTF ("REMOVE_PEER: INVALID INDEX.\n\n");
                 pthread_mutex_unlock (&(torrent_engine->mutex));
                 continue;
             }
@@ -625,7 +627,7 @@ int main (int argc, char **argv)
             int ret = check_ipv4 (val);
             if (ret == -1)
             {
-                RED_PRTF ("ADD_PEER: INVALID IP.\n\n");
+                RED_PRTF ("REMOVE_PEER: INVALID IP - %s.\n\n", val);
                 continue;
             }
             char *ip = val;
@@ -634,7 +636,7 @@ int main (int argc, char **argv)
             int port = atoi (val);
             if (port < 0 || port > 65535)
             {
-                RED_PRTF ("ADD_PEER: INVALID PORT.\n\n");
+                RED_PRTF ("REMOVE_PEER: INVALID PORT.\n\n");
                 continue;
             }
 

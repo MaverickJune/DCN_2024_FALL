@@ -88,7 +88,11 @@ int check_ipv4 (char *ip)
                 nums++;
             }
             else
+            {
+                ERROR_PRTF ("ERROR check_ipv4() 1: num %d, nums %d, dots %d, i %d, ip %c\n", 
+                    num, nums, dots, i, ip[i]);
                 return -1;
+            }
         }
         else
         {
@@ -98,26 +102,46 @@ int check_ipv4 (char *ip)
                 num += ip[i] - '0';
                 nums++;
                 if (nums > 3 || num > 255)
+                {
+                    ERROR_PRTF ("ERROR check_ipv4() 2: num %d, nums %d, dots %d, i %d, ip %c\n", 
+                        num, nums, dots, i, ip[i]);
                     return -1;
+                }
             }
             else if (ip[i] == '.')
             {
                 if (num > 255 || nums == 0)
+                {
+                    ERROR_PRTF ("ERROR check_ipv4() 3: num %d, nums %d, dots %d, i %d, ip %c\n", 
+                        num, nums, dots, i, ip[i]);
                     return -1;
+                }
                 num = -1;
                 nums = 0;
                 dots++;
                 if (dots > 3)
+                {
+                    ERROR_PRTF ("ERROR check_ipv4() 4: num %d, nums %d, dots %d, i %d, ip %c\n", 
+                        num, nums, dots, i, ip[i]);
                     return -1;
+                }
             }
             else if (dots == 3 && nums > 0)
             {
                 if (num > 255)
+                {
+                    ERROR_PRTF ("ERROR check_ipv4() 5: num %d, nums %d, dots %d, i %d, ip %c\n", 
+                        num, nums, dots, i, ip[i]);
                     return -1;
+                }
                 break;
             }
             else 
+            {
+                ERROR_PRTF ("ERROR check_ipv4() 6: num %d, nums %d, dots %d, i %d, ip %c\n", 
+                    num, nums, dots, i, ip[i]);
                 return -1;
+            }
         }
     }
     return i;
@@ -196,7 +220,7 @@ ssize_t get_file_size (char *path)
     return len;
 }
 
-ssize_t write_bytes (int socket, char *buffer, size_t size)
+ssize_t write_bytes (int socket, void *buffer, size_t size)
 {
     ssize_t bytes_sent = 0;
     ssize_t bytes_remaining = size;
@@ -215,7 +239,7 @@ ssize_t write_bytes (int socket, char *buffer, size_t size)
     return size;
 }
 
-ssize_t read_bytes (int socket, char *buffer, size_t size)
+ssize_t read_bytes (int socket, void *buffer, size_t size)
 {
     ssize_t bytes_received = 0;
     ssize_t bytes_remaining = size;

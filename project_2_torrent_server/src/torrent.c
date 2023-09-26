@@ -80,7 +80,7 @@ torrent_t *init_torrent_from_file (torrent_engine_t *engine, char *torrent_name,
     for (size_t i = 0; i < torrent->num_blocks; i++)
     {
         torrent->block_hashes[i] = get_hash (get_block_ptr (torrent, i), BLOCK_SIZE);
-        torrent->block_status[i] = 1;
+        torrent->block_status[i] = B_COMPLETED;
     }
     torrent->torrent_hash = get_hash (torrent->data, torrent->file_size);
     return torrent;
@@ -137,7 +137,7 @@ int set_torrent_info (torrent_t *torrent, char *torrent_name, size_t file_size)
         return -1;
     }
 
-    torrent->block_status = calloc (torrent->num_blocks, sizeof(char));
+    torrent->block_status = calloc (torrent->num_blocks, sizeof (B_STAT));
     if (torrent->block_status == NULL)
     {
         ERROR_PRTF ("ERROR init_torrent_from_file(): block_status calloc failed.\n");
@@ -151,7 +151,7 @@ int set_torrent_info (torrent_t *torrent, char *torrent_name, size_t file_size)
     for (size_t i = 0; i < torrent->num_blocks; i++)
     {
         torrent->block_hashes[i] = 0;
-        torrent->block_status[i] = 0;
+        torrent->block_status[i] = B_MISSING;
     }
 
     for (size_t i = 0; i < torrent->num_peers; i++)
@@ -226,7 +226,7 @@ int save_torrent_as_file (torrent_t *torrent)
     }
 
     strcat (path, torrent->torrent_name);
-    INFO_PRTF ("\tINFO [%04.3fs] SAVING 0x%08x TO %s.\n", (double)get_elapsed_msec()/1000, 
+    INFO_PRTF ("\t[%04.3fs] SAVING 0x%08x TO %s.\n", (double)get_elapsed_msec()/1000, 
             torrent->torrent_hash, path);
     FILE *fp = fopen (path, "wb");
     if (fp == NULL)
@@ -276,6 +276,26 @@ ssize_t find_torrent_name (torrent_engine_t *engine, char* name)
     return -1;
 }
 
+B_STAT get_block_status (torrent_t *torrent, size_t block_index)
+{
+    if (torrent == NULL)
+    {
+        ERROR_PRTF ("ERROR get_block_status(): torrent is NULL.\n");
+        return B_ERROR;
+    }
+    if (torrent->block_status == NULL)
+    {
+        ERROR_PRTF ("ERROR get_block_status(): torrent block_status is NULL.\n");
+        return B_ERROR;
+    }
+    if (block_index >= torrent->num_blocks || block_index < 0)
+    {
+        ERROR_PRTF ("ERROR get_block_status(): invalid block index.\n");
+        return B_ERROR;
+    }
+    return torrent->block_status[block_index];
+}
+
 ssize_t get_num_completed_blocks (torrent_t *torrent)
 {
     if (torrent == NULL)
@@ -288,7 +308,7 @@ ssize_t get_num_completed_blocks (torrent_t *torrent)
     size_t num_completed_blocks = 0;
     for (size_t i = 0; i < torrent->num_blocks; i++)
     {
-        if (torrent->block_status[i] == 1)
+        if (get_block_status (torrent, i) == B_COMPLETED)
             num_completed_blocks++;
     }
     return num_completed_blocks;
@@ -298,33 +318,33 @@ ssize_t get_missing_block (torrent_t *torrent, size_t start_idx)
 {
     if (torrent == NULL || start_idx >= torrent->num_blocks)
     {
-        ERROR_PRTF ("ERROR get_missing_block(): invalid arguments.\n");
-        return -1;
+        ERROR_PRTF ("ERROR get_missing_block(): invalid arguments. - torrent: %p, %ld\n", torrent, start_idx);
+        return -2;
     }
     if (torrent->block_status == NULL)
     {
         ERROR_PRTF ("ERROR get_missing_block(): torrent block_status is NULL.\n");
-        return -1;
+        return -2;
     }
     for (size_t i = start_idx; i < torrent->num_blocks; i++)
     {
-        if (torrent->block_status[i] == 0)
+        if (get_block_status (torrent, i) == B_MISSING)
             return i;
     }
     return -1;
 }
 
-char get_peer_block_status (peer_data_t *peer, size_t block_index)
+B_STAT get_peer_block_status (peer_data_t *peer, size_t block_index)
 {
     if (peer == NULL || block_index >= peer->torrent->num_blocks)
     {
         ERROR_PRTF ("ERROR get_peer_block_status(): invalid arguments.\n");
-        return -1;
+        return B_ERROR;
     }
     if (peer->block_status == NULL)
     {
         ERROR_PRTF ("ERROR get_peer_block_status(): peer block_status is NULL.\n");
-        return -1;
+        return B_ERROR;
     }
     return peer->block_status[block_index];
 }
@@ -341,7 +361,7 @@ ssize_t get_peer_num_completed_blocks (peer_data_t *peer)
     size_t num_completed_blocks = 0;
     for (size_t i = 0; i < peer->torrent->num_blocks; i++)
     {
-        if (peer->block_status[i] == 1)
+        if (peer->block_status[i] == B_COMPLETED)
             num_completed_blocks++;
     }
     return num_completed_blocks;
@@ -423,7 +443,7 @@ int set_peer_block_info (peer_data_t *peer_data)
         return -1;
     }
 
-    peer_data->block_status = calloc (torrent->num_blocks, sizeof (char));
+    peer_data->block_status = calloc (torrent->num_blocks, sizeof (B_STAT));
     if (peer_data->block_status == NULL)
     {
         ERROR_PRTF ("ERROR init_peer_data(): block_status calloc failed.\n");
@@ -431,7 +451,7 @@ int set_peer_block_info (peer_data_t *peer_data)
         return -1;
     }
     for (size_t i = 0; i < torrent->num_blocks; i++)
-        peer_data->block_status[i] = 0;
+        peer_data->block_status[i] = B_MISSING;
     return 0;
 }
 
