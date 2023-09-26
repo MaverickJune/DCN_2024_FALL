@@ -115,6 +115,9 @@ void print_tuple_yellow (char *a, char *b, int format_len, int indent);
 // Print HTTP struct to stdout.
 void print_http_header (http_t *http);
 
+// Print string with \r\n explicitly written.
+void print_with_r_n (char *str);
+
 // Encode data to base64.
 // From https://stackoverflow.com/questions/342409/how-do-i-base64-encode-decode-in-c
 char *base64_encode(char *data, size_t input_length) ;

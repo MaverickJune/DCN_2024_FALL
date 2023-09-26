@@ -620,6 +620,28 @@ void print_http_header (http_t *http)
         print_tuple_yellow (http->fields[i].field, http->fields[i].val, longest_field, 3);
 }
 
+void print_with_r_n (char *str)
+{
+    if (str == NULL)
+    {
+        ERROR_PRTF ("ERROR print_with_r_n(): NULL parameter\n");
+        return;
+    }
+    int i = 0;
+    for (; i < strlen(str); i++)
+    {
+        if (str[i] == '\r' && str[i + 1] == '\n')
+            printf ("\\r\\n\r");
+        else
+            printf ("%c", str[i]);
+    }
+    if (str[i - 1] == '\r')
+        printf ("\\r\\n");
+    printf ("\n");
+
+    fflush (stdout);
+}
+
 char *base64_encode(char *data, size_t input_length) 
 {
     static char encoding_table[] = {
