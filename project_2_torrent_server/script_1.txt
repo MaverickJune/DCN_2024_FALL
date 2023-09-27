@@ -4,8 +4,5 @@ add 0x353f137d
 add 0xe6fd1247
 status
 add_peer 2 127.0.0.1 62124
-add_peer 2 127.0.0.1 62125
-add_peer 2 123.0.0.1 62126
 add_peer 3 127.0.0.1 62124
-add_peer 3 123.11.11.11 62124
 watch

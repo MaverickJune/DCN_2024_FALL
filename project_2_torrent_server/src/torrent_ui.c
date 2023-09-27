@@ -19,11 +19,23 @@ void *torrent_engine_thread (void *_engine)
     torrent_engine_t *engine = (torrent_engine_t *)_engine;
     while (engine->stop_engine == 0)
     {
+        size_t start_time = get_time_msec();
         pthread_mutex_lock (&engine->mutex);
-        torrent_client (engine);
-        torrent_server (engine);
+        while (get_time_msec () < start_time + CLIENT_TIME_MSEC)
+            torrent_client (engine);
         pthread_mutex_unlock (&engine->mutex);
-        usleep ((rand() % RAND_WAIT_RANGE) * 1000);
+
+        start_time = get_time_msec();
+        pthread_mutex_lock (&engine->mutex);
+        while (get_time_msec () < start_time + SERVER_TIME_MSEC)
+            torrent_server (engine);
+        pthread_mutex_unlock (&engine->mutex);
+        usleep ((rand() % RAND_WAIT_MSEC + 10) * 1000);
+        if (print_info == 1)
+        {
+            INFO_PRTF ("\t[%04.3fs] ENGINE REV COMPLETE.\n", (double)get_elapsed_msec()/1000);
+            print_engine_status (engine);
+        }
     }
     return NULL;
 }

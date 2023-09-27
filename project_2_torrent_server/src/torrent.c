@@ -27,6 +27,8 @@ torrent_t *init_torrent (torrent_engine_t *engine)
     torrent->file_size = 0;
     torrent->data = NULL;
 
+    torrent->last_torrent_save_msec = 0;
+    torrent->last_block_status_reset_msec = 0;
     torrent->num_blocks = 0;
     torrent->block_hashes = NULL;
     torrent->block_status = NULL;
@@ -80,7 +82,7 @@ torrent_t *init_torrent_from_file (torrent_engine_t *engine, char *torrent_name,
     for (size_t i = 0; i < torrent->num_blocks; i++)
     {
         torrent->block_hashes[i] = get_hash (get_block_ptr (torrent, i), BLOCK_SIZE);
-        torrent->block_status[i] = B_COMPLETED;
+        torrent->block_status[i] = B_READY;
     }
     torrent->torrent_hash = get_hash (torrent->data, torrent->file_size);
     return torrent;
@@ -200,8 +202,9 @@ int save_torrent_as_file (torrent_t *torrent)
         ERROR_PRTF ("ERROR save_torrent_as_file(): torrent data is empty.\n");
         return -1;
     }
-    if (torrent->torrent_hash != get_hash (torrent->data, torrent->file_size))
-        ERROR_PRTF ("Warning save_torrent_as_file(): torrent hash is invalid.\n");
+
+    // Update torrent save time.
+    torrent->last_torrent_save_msec = get_time_msec();
 
     char path [STR_LEN*2 + 12] = {0};
     struct stat st = {0};
@@ -228,6 +231,11 @@ int save_torrent_as_file (torrent_t *torrent)
     strcat (path, torrent->torrent_name);
     INFO_PRTF ("\t[%04.3fs] SAVING 0x%08x TO %s.\n", (double)get_elapsed_msec()/1000, 
             torrent->torrent_hash, path);
+    if (torrent->torrent_hash != get_hash (torrent->data, torrent->file_size))
+        INFO_PRTF ("\t[%04.3fs] WARNING: SAVE OUTPUT HASH 0x%08x DOES NOT MATCH 0x%08x.\n", 
+                (double)get_elapsed_msec()/1000, 
+                    get_hash (torrent->data, torrent->file_size), torrent->torrent_hash);
+
     FILE *fp = fopen (path, "wb");
     if (fp == NULL)
     {
@@ -308,7 +316,7 @@ ssize_t get_num_completed_blocks (torrent_t *torrent)
     size_t num_completed_blocks = 0;
     for (size_t i = 0; i < torrent->num_blocks; i++)
     {
-        if (get_block_status (torrent, i) == B_COMPLETED)
+        if (get_block_status (torrent, i) == B_READY)
             num_completed_blocks++;
     }
     return num_completed_blocks;
@@ -361,7 +369,7 @@ ssize_t get_peer_num_completed_blocks (peer_data_t *peer)
     size_t num_completed_blocks = 0;
     for (size_t i = 0; i < peer->torrent->num_blocks; i++)
     {
-        if (peer->block_status[i] == B_COMPLETED)
+        if (peer->block_status[i] == B_READY)
             num_completed_blocks++;
     }
     return num_completed_blocks;

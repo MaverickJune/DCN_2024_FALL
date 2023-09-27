@@ -15,7 +15,7 @@ OBJDIR=./obj/
 VPATH=./src/
 DEPS = $(wildcard *.h)
 
-OPTS=-O0 -g
+OPTS=-O3
 LDFLAGS= 
 COMMON= -D SAVE_DIR=\"$(SAVE_DIR)\" -Iinclude/
 CFLAGS= -Wall -Wno-unused-variable

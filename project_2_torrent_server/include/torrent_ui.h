@@ -11,6 +11,18 @@
 
 #include "torrent.h"
 
+// UI macros
+#define UPDATE() printf("\033[H\033[J")
+#define GOTO_X_Y(x, y) printf("\033[%d;%dH", x, y)
+
+// Constants
+#define CLIENT_TIME_MSEC 50
+#define SERVER_TIME_MSEC 250
+#define RAND_WAIT_MSEC 10
+#define WATCH_UPDATE_MSEC 500
+#define PRINT_COL_NUM 16
+#define PRINT_SKIP_NUM 3
+
 //// UI FUNCTIONS ////  
 
 // Wrapper functions for the client and server threads.

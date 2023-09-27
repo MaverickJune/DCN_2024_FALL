@@ -5,5 +5,4 @@ add 0x08e92a71
 status
 add_peer 2 127.0.0.1 62123
 add_peer 3 127.0.0.1 62123
-add_peer 3 123.11.11.12 62124
 watch

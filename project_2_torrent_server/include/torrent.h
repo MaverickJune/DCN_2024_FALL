@@ -25,33 +25,20 @@
 
 extern int print_info;
 
-#define UPDATE() printf("\033[H\033[J")
-#define GOTO_X_Y(x, y) printf("\033[%d;%dH", x, y)
-
+// Print macros
 #define RED_PRTF(...) {printf("\033[0;31m"); printf(__VA_ARGS__); printf("\033[0m");}
 #define GREEN_PRTF(...) {printf("\033[0;32m"); printf(__VA_ARGS__); printf("\033[0m");}
 #define YELLOW_PRTF(...) {printf("\033[0;33m"); printf(__VA_ARGS__); printf("\033[0m");}
 #define ERROR_PRTF(...) {fprintf(stderr, "\033[0;31m"); fprintf(stderr, "(%s:%d)", __FILE__, __LINE__); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\033[0m");}
 #define INFO_PRTF(...) {if (print_info){printf("\033[0;34m"); printf(__VA_ARGS__); printf("\033[0m");}}
 
+// Constants
 #define STR_LEN 64
 #define MSG_LEN (STR_LEN*4)
-#define DEFAULT_ARR_MAX_NUM 16
 #define BLOCK_SIZE (32*1024) // 32KiB
+#define DEFAULT_ARR_MAX_NUM 16
+#define TIMEOUT_MSEC 10
 #define HASH_SEED 0x12345678
-#define TIMEOUT_MSEC 50
-#define WATCH_UPDATE_MSEC 500
-#define REQUEST_TORRENT_INFO_INTERVAL_MSEC 1000
-#define REQUEST_PEER_LIST_INTERVAL_MSEC 2000
-#define REQUEST_BLOCK_STATUS_INTERVAL_MSEC 1000
-#define REQUEST_BLOCK_INTERVAL_MSEC 200
-#define RESET_BLOCK_STATUS_INTERVAL_MSEC 5000
-#define PEER_EVICT_REQUEST_NUM 50
-#define PEER_LIST_MAX_BYTE_PER_PEER 21 // [PEER_X_IP]:[PEER_X_PORT] = "xxx.xxx.xxx.xxx:xxxxx "
-#define RAND_WAIT_RANGE 60
-#define MAX_QUEUED_CONNECTIONS 16
-#define PRINT_COL_NUM 16
-#define PRINT_SKIP_NUM 3
 
 // Hash of value 0 is used to indicate an invalid hash.
 typedef uint32_t HASH_t;
@@ -59,12 +46,13 @@ typedef struct torrent torrent_t;
 typedef struct torrent_engine torrent_engine_t;
 typedef struct peer_data peer_data_t;
 
+// Enum for block status.
 typedef enum B_STAT
 {
     B_ERROR = -1,
     B_MISSING = 0,
     B_REQUESTED = 1,
-    B_COMPLETED = 2
+    B_READY = 2
 } B_STAT;
 
 // Struct for managing individual peers.
@@ -79,7 +67,6 @@ struct peer_data
     size_t last_peer_list_request_msec;
     size_t last_block_status_request_msec;
     size_t last_block_request_msec;
-    size_t last_block_status_reset_msec;
     B_STAT *block_status;
 
 };
@@ -104,6 +91,8 @@ struct torrent
     size_t max_num_peers;
     peer_data_t **peers;
 
+    size_t last_torrent_save_msec;
+    size_t last_block_status_reset_msec;
     void* data;
 
 };
