@@ -14,32 +14,6 @@
 
 int print_info = 0;
 
-void *torrent_engine_thread (void *_engine)
-{
-    torrent_engine_t *engine = (torrent_engine_t *)_engine;
-    while (engine->stop_engine == 0)
-    {
-        size_t start_time = get_time_msec();
-        pthread_mutex_lock (&engine->mutex);
-        while (get_time_msec () < start_time + CLIENT_TIME_MSEC)
-            torrent_client (engine);
-        pthread_mutex_unlock (&engine->mutex);
-
-        start_time = get_time_msec();
-        pthread_mutex_lock (&engine->mutex);
-        while (get_time_msec () < start_time + SERVER_TIME_MSEC)
-            torrent_server (engine);
-        pthread_mutex_unlock (&engine->mutex);
-        usleep ((rand() % RAND_WAIT_MSEC + 10) * 1000);
-        if (print_info == 1)
-        {
-            INFO_PRTF ("\t[%04.3fs] ENGINE REV COMPLETE.\n", (double)get_elapsed_msec()/1000);
-            print_engine_status (engine);
-        }
-    }
-    return NULL;
-}
-
 torrent_engine_t *init_torrent_engine (int port)
 {
     if (port < 0 || port > 65535)
@@ -78,7 +52,7 @@ torrent_engine_t *init_torrent_engine (int port)
 
     engine->stop_engine = 0;
     pthread_mutex_init (&engine->mutex, NULL);
-    pthread_create (&engine->thread, NULL, torrent_engine_thread, engine);
+    pthread_create (&engine->thread, NULL, torrent_engine_thread_wrapper, engine);
 
     return engine;
 }
@@ -228,7 +202,7 @@ void print_engine_status (torrent_engine_t *engine)
         torrent_t *torrent = engine->torrents[i];
         printf ("\t\tNAME: %s, ", torrent->torrent_name? torrent->torrent_name : "NULL");
         printf ("STATUS: ");
-        if (torrent->num_blocks == 0)
+        if (is_torrent_info_set (torrent) == 0)
             RED_PRTF ("NO INFO\n")
         else if (get_num_completed_blocks (torrent) == torrent->num_blocks)
             GREEN_PRTF ("COMPLETED\n")
@@ -241,8 +215,9 @@ void print_engine_status (torrent_engine_t *engine)
             printf ("%.2f KiB", (float)torrent->file_size / 1024);
         else
             printf ("%ld B", torrent->file_size);
-        printf (", BLOCKS: %ld/%ld, NUM PEERS: %ld\n",
-                get_num_completed_blocks(torrent), torrent->num_blocks, torrent->num_peers);
+        printf (", BLOCKS: %ld/%ld, NUM PEERS: %ld, SPEED: %.2f KiB/s\n",
+            get_num_completed_blocks(torrent), torrent->num_blocks, torrent->num_peers, 
+                (double)get_torrent_download_speed(torrent)/1024.0);
         if (torrent->num_peers != 0)
         {
             printf ("\t\t\tPEERS:");
@@ -262,7 +237,7 @@ void print_torrent_status (torrent_t *torrent)
         return;
     printf ("\tNAME: %s, ", torrent->torrent_name? torrent->torrent_name : "NULL");
     printf ("STATUS: ");
-    if (torrent->num_blocks == 0)
+    if (is_torrent_info_set (torrent) == 0)
         RED_PRTF ("NO INFO\n")
     else if (get_num_completed_blocks (torrent) == torrent->num_blocks)
         GREEN_PRTF ("COMPLETED\n")
@@ -275,9 +250,10 @@ void print_torrent_status (torrent_t *torrent)
             printf ("%.2f KiB", (float)torrent->file_size / 1024);
         else
             printf ("%ld B", torrent->file_size);
-        printf (", BLOCKS: %ld/%ld, NUM PEERS: %ld\n",
-                get_num_completed_blocks(torrent), torrent->num_blocks, torrent->num_peers);
-    if (torrent->num_blocks != 0)
+    printf (", BLOCKS: %ld/%ld, NUM PEERS: %ld, SPEED: %.2f KiB/s\n",
+        get_num_completed_blocks(torrent), torrent->num_blocks, torrent->num_peers, 
+            (double)get_torrent_download_speed(torrent)/1024.0);
+    if (is_torrent_info_set (torrent) == 1)
     {
         printf ("\t\tBLOCK STATUS:");
         int leading_space_num = get_int_str_len (torrent->num_blocks);
@@ -290,7 +266,14 @@ void print_torrent_status (torrent_t *torrent)
             {
             if (i % PRINT_COL_NUM == 0)
                 YELLOW_PRTF ("\n\t\t\t%*ld ", leading_space_num, i);
-            printf ("%*d ", leading_space_num, get_block_status (torrent, i));
+            if (get_block_status (torrent, i) == B_MISSING)
+                RED_PRTF ("%*s ", leading_space_num, "X")
+            else if (get_block_status (torrent, i) == B_REQUESTED)
+                YELLOW_PRTF ("%*s ", leading_space_num, "R")
+            else if (get_block_status (torrent, i) == B_READY)
+                GREEN_PRTF ("%*s ", leading_space_num, "O")
+            else
+                RED_PRTF ("%*s ", leading_space_num, "?")
             }
             else
                 if (skip_flag == 0)
@@ -331,9 +314,9 @@ void print_peer_status (peer_data_t *peer)
 {
     if (peer == NULL)
         return;
-    printf ("\t\t\tIP: %s, PORT: %d, NUM REQUESTS: %ld/%d\n", 
-        peer->ip, peer->port, peer->num_requests, PEER_EVICT_REQUEST_NUM);
-    if (peer->torrent->num_blocks != 0)
+    printf ("\t\t\tIP: %s, PORT: %d\n", 
+        peer->ip, peer->port);
+    if (is_torrent_info_set (peer->torrent) == 1)
     {
         printf ("\t\t\tPEER BLOCK STATUS:");
         int leading_space_num = get_int_str_len (peer->torrent->num_blocks);
@@ -346,7 +329,14 @@ void print_peer_status (peer_data_t *peer)
             {
             if (i % PRINT_COL_NUM == 0)
                 YELLOW_PRTF ("\n\t\t\t%*ld ", leading_space_num, i);
-            printf ("%*d ", leading_space_num, get_peer_block_status (peer, i));
+            if (get_peer_block_status (peer, i) == B_MISSING)
+                RED_PRTF ("%*s ", leading_space_num, "X")
+            else if (get_peer_block_status (peer, i) == B_REQUESTED)
+                YELLOW_PRTF ("%*s ", leading_space_num, "R")
+            else if (get_peer_block_status (peer, i) == B_READY)
+                GREEN_PRTF ("%*s ", leading_space_num, "O")
+            else
+                RED_PRTF ("%*s ", leading_space_num, "?")
             }
             else
                 if (skip_flag == 0)
@@ -434,11 +424,11 @@ int main (int argc, char **argv)
                     GOTO_X_Y (0, 0);
                     GREEN_PRTF ("WATCHING TORRENT");
                     printf (" ENGINE");
-                    for (int i = 0; i < dots; i++)
+                    for (int i = 0; i < dots/2; i++)
                         printf (".");
-                    for (int i = 0; i < 4 - dots; i++)
+                    for (int i = 0; i < 4 - dots/2; i++)
                         printf (" ");
-                    dots = (dots + 1) % 4;
+                    dots = (dots + 1) % 8;
                     printf (" (Press ENTER to stop.)\n");
                     print_engine_status (torrent_engine);
                 }
@@ -511,7 +501,7 @@ int main (int argc, char **argv)
         {
             ssize_t idx = strtoll (cmd+7, NULL, 0);
             pthread_mutex_lock (&(torrent_engine->mutex));
-            if (idx == 0 || idx >= torrent_engine->num_torrents)
+            if (idx < 0 || idx >= torrent_engine->num_torrents)
             {
                 RED_PRTF ("REMOVE: INVALID INDEX.\n\n");
                 pthread_mutex_unlock (&(torrent_engine->mutex));
@@ -531,7 +521,7 @@ int main (int argc, char **argv)
         {
             ssize_t idx = strtoll (cmd+5, NULL, 0);
             pthread_mutex_lock (&(torrent_engine->mutex));
-            if (idx == 0 || idx >= torrent_engine->num_torrents)
+            if (idx < 0 || idx >= torrent_engine->num_torrents)
             {
                 RED_PRTF ("INFO: INVALID INDEX.\n\n");
                 pthread_mutex_unlock (&(torrent_engine->mutex));
@@ -546,7 +536,7 @@ int main (int argc, char **argv)
         {
             ssize_t idx = strtoll (cmd+6, NULL, 0);
             pthread_mutex_lock (&(torrent_engine->mutex));
-            if (idx == 0 || idx >= torrent_engine->num_torrents)
+            if (idx < 0 || idx >= torrent_engine->num_torrents)
             {
                 RED_PRTF ("WATCH: INVALID INDEX.\n\n");
                 pthread_mutex_unlock (&(torrent_engine->mutex));
@@ -566,11 +556,11 @@ int main (int argc, char **argv)
                     GOTO_X_Y (0, 0);
                     GREEN_PRTF ("WATCHING TORRENT");
                     printf (" 0x%08x", hash);
-                    for (int i = 0; i < dots; i++)
+                    for (int i = 0; i < dots/2; i++)
                         printf (".");
-                    for (int i = 0; i < 4 - dots; i++)
+                    for (int i = 0; i < 4 - dots/2; i++)
                         printf (" ");
-                    dots = (dots + 1) % 4;
+                    dots = (dots + 1) % 8;
                     printf (" (Press ENTER to stop.)\n");
                     print_torrent_status_hash (torrent_engine, hash);
                 }
@@ -584,7 +574,7 @@ int main (int argc, char **argv)
             val = strtok (NULL, " ");
             ssize_t idx = strtoll (val, NULL, 0);
             pthread_mutex_lock (&(torrent_engine->mutex));
-            if (idx == 0 || idx >= torrent_engine->num_torrents)
+            if (idx < 0 || idx >= torrent_engine->num_torrents)
             {
                 RED_PRTF ("ADD_PEER: INVALID INDEX.\n\n");
                 pthread_mutex_unlock (&(torrent_engine->mutex));
@@ -626,7 +616,7 @@ int main (int argc, char **argv)
             val = strtok (NULL, " ");
             ssize_t idx = strtoll (val, NULL, 0);
             pthread_mutex_lock (&(torrent_engine->mutex));
-            if (idx == 0 || idx >= torrent_engine->num_torrents)
+            if (idx < 0 || idx >= torrent_engine->num_torrents)
             {
                 RED_PRTF ("REMOVE_PEER: INVALID INDEX.\n\n");
                 pthread_mutex_unlock (&(torrent_engine->mutex));

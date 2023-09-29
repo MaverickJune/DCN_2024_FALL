@@ -13,12 +13,11 @@
 
 // Constants
 #define REQUEST_TORRENT_INFO_INTERVAL_MSEC 1000
-#define REQUEST_PEER_LIST_INTERVAL_MSEC 2000
-#define REQUEST_BLOCK_STATUS_INTERVAL_MSEC 1000
-#define REQUEST_BLOCK_INTERVAL_MSEC 100
+#define REQUEST_PEER_LIST_INTERVAL_MSEC 3000
+#define REQUEST_BLOCK_STATUS_INTERVAL_MSEC 1500
+#define REQUEST_BLOCK_INTERVAL_MSEC 150
 #define RESET_BLOCK_STATUS_INTERVAL_MSEC 5000
 #define TORRENT_SAVE_INTERVAL_MSEC 5000
-#define PEER_EVICT_REQUEST_NUM 50
 #define PEER_LIST_MAX_BYTE_PER_PEER 21 // [PEER_X_IP]:[PEER_X_PORT] = "xxx.xxx.xxx.xxx:xxxxx "
 #define MAX_QUEUED_CONNECTIONS 16
 
@@ -140,7 +139,7 @@ int handle_request_torrent_block (torrent_engine_t *engine, int peer_sock,
 int handle_push_torrent_peer_list (torrent_engine_t *engine, int peer_sock, 
     peer_data_t *peer, torrent_t *torrent, char *msg_body);
 
-// Handle a push of a block status.
+// Handle a push of a peer block status.
 // Returns 0 on success, -1 on error.
 // PUSH_TORRENT_BLOCK_STATUS [MY_ENGINE_HASH] [MY_LISTEN_PORT] [TORRENT_HASH] [BLOCK_STATUS]
 // [BLOCK_STATUS] is a binary dump of the torrent's block status, which starts AFTER MSG_LEN bytes in the message.

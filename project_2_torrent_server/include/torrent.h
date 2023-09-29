@@ -17,6 +17,7 @@
 #include "unistd.h"
 #include "pthread.h"
 #include "poll.h"
+#include "fcntl.h"
 #include "sys/stat.h"
 #include "sys/time.h"
 #include "sys/socket.h"
@@ -33,11 +34,12 @@ extern int print_info;
 #define INFO_PRTF(...) {if (print_info){printf("\033[0;34m"); printf(__VA_ARGS__); printf("\033[0m");}}
 
 // Constants
+#define SERVER_TIME_MSEC 40
 #define STR_LEN 64
 #define MSG_LEN (STR_LEN*4)
 #define BLOCK_SIZE (32*1024) // 32KiB
 #define DEFAULT_ARR_MAX_NUM 16
-#define TIMEOUT_MSEC 10
+#define TIMEOUT_MSEC 5
 #define HASH_SEED 0x12345678
 
 // Hash of value 0 is used to indicate an invalid hash.
@@ -61,8 +63,6 @@ struct peer_data
     torrent_t *torrent;
     char ip[STR_LEN];
     int port;
-    // Number of requests sent to the peer. Cleared when the peer sends a push message.
-    size_t num_requests; 
     size_t last_torrent_info_request_msec;
     size_t last_peer_list_request_msec;
     size_t last_block_status_request_msec;
@@ -93,6 +93,10 @@ struct torrent
 
     size_t last_torrent_save_msec;
     size_t last_block_status_reset_msec;
+
+    size_t download_speed;
+    size_t download_speed_prev_num_blocks;
+    size_t download_speed_prev_msec;
     void* data;
 
 };
@@ -113,6 +117,33 @@ struct torrent_engine
     int stop_engine;
 
 };
+
+typedef struct request_wrapper_data_t
+{
+    peer_data_t *peer;
+    torrent_t *torrent;
+    size_t block_index;
+} request_wrapper_data_t;
+
+//// MULTITHREADING FUNCTIONS ////
+
+void *torrent_engine_thread_wrapper (void *_engine);
+
+int request_torrent_info_thread (peer_data_t *peer, torrent_t *torrent);
+
+int request_torrent_peer_list_thread (peer_data_t *peer, torrent_t *torrent);
+
+int request_torrent_block_status_thread (peer_data_t *peer, torrent_t *torrent);
+
+int request_torrent_block_thread (peer_data_t *peer, torrent_t *torrent, size_t block_index);
+
+void *request_torrent_info_thread_wrapper (void *_request_wrapper_data);
+
+void *request_torrent_peer_list_thread_wrapper (void *_request_wrapper_data);
+
+void *request_torrent_block_status_thread_wrapper (void *_request_wrapper_data);
+
+void *request_torrent_block_thread_wrapper (void *_request_wrapper_data);
 
 //// TORRENT MANAGEMENT FUNCTIONS ////
 
@@ -136,6 +167,10 @@ void destroy_torrent (torrent_t *torrent);
 // Returns 0 on success, -1 on error.
 int set_torrent_info (torrent_t *torrent, char *torrent_name, size_t file_size);
 
+// Check if torrent info is set.
+// Returns 1 if set, 0 if not set, -1 if error.
+int is_torrent_info_set (torrent_t *torrent);
+
 // Save torrent as file under SAVE_DIR. 
 // Returns 0 on success, -1 on error.
 int save_torrent_as_file (torrent_t *torrent);
@@ -156,9 +191,9 @@ B_STAT get_block_status (torrent_t *torrent, size_t block_index);
 // Returns the number of completed blocks if successful, -1 if error.
 ssize_t get_num_completed_blocks (torrent_t *torrent);
 
-// Find the index of first block that is missing, starting from start_idx.
-// Returns the block index if found, -1 if not found, -2 if error.
-ssize_t get_missing_block (torrent_t *torrent, size_t start_idx);
+// Get the index of a random missing block that the given peer has.
+// Returns the block index if successful, -1 if no such block exists, -2 if error.
+ssize_t get_rand_missing_block_that_peer_has (torrent_t *torrent, peer_data_t *peer);
 
 // Get the status of a peer block with the given index.
 // Returns the status if successful, B_ERROR if error.
@@ -171,6 +206,10 @@ ssize_t get_peer_num_completed_blocks (peer_data_t *peer);
 // Find pointer to the torrent block data indicated by the block index.
 // Returns the pointer if successful, NULL if error.
 void *get_block_ptr (torrent_t *torrent, size_t block_index);
+
+// Get the download speed of the torrent in B/s.
+// Returns the download speed if successful, -1 if error.
+ssize_t get_torrent_download_speed (torrent_t *torrent);
 
 // Check if the max number of torrents for the engine is reached.
 // If so, double the max number of torrents for the engine.
@@ -203,5 +242,6 @@ ssize_t find_peer (torrent_t *torrent, char *ip, int port);
 // Check if the max number of peers for the torrent is reached.
 // If so, double the max number of peers for the torrent.
 int update_if_max_peer_reached (torrent_t *torrent);
+
 
 #endif // TORRENT_H
