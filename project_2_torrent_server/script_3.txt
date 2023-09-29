@@ -1,0 +1,10 @@
+add 0x353f137d
+add 0xe6fd1247
+add 0x878d71f4
+add 0x08e92a71
+status
+add_peer 0 127.0.0.1 62123
+add_peer 1 127.0.0.1 62123
+add_peer 2 127.0.0.1 62124
+add_peer 3 127.0.0.1 62124
+watch
