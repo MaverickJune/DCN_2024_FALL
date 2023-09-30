@@ -14,6 +14,201 @@
 #define ALBUM_HTML_PATH "./server_root/public/album/album_images.html"
 #define ALBUM_HTML_TEMPLATE "<div class=\"card\"> <img src=\"/public/album/%s\" alt=\"Unable to load %s\"> </div>\n"
 
+http_t *parse_http_header_ans (char *header_str)
+{
+    if (header_str == NULL)
+    {
+        ERROR_PRTF ("ERROR parse_http_header(): NULL parameter\n");
+        return NULL;
+    }
+
+    http_t *http = init_http();
+
+    char *line = strtok(header_str, "\r\n");
+    char *next_line = line + strlen(line) + 1;
+    if (line == NULL)
+    {
+        ERROR_PRTF ("ERROR parse_http_header(): first-line\n");
+        goto ERROR;
+    }
+    char *token = strtok (line, " ");
+    while (token != NULL)
+    {
+        if (http->method == NULL)
+        {
+            http->method = copy_string(token);
+            if (http->method == NULL)
+            {
+                ERROR_PRTF ("ERROR parse_http_header(): method copy\n");
+                goto ERROR;
+            }
+        }
+        else if (http->path == NULL)
+        {
+            // Truncate query string and fragment identifier
+            char *query_string = strchr(token, '?');
+            if (query_string != NULL)
+                *query_string = '\0';
+            char *fragment_identifier = strchr(token, '#');
+            if (fragment_identifier != NULL)
+                *fragment_identifier = '\0';
+            http->path = copy_string(token);
+            if (http->path == NULL)
+            {
+                ERROR_PRTF ("ERROR parse_http_header(): path copy\n");
+                goto ERROR;
+            }
+        }
+        else if (http->version == NULL)
+        {
+            http->version = copy_string(token);
+            if (http->version == NULL)
+            {
+                ERROR_PRTF ("ERROR parse_http_header(): version copy\n");
+                goto ERROR;
+            }
+        }
+        else
+        {
+            ERROR_PRTF ("ERROR parse_http_header(): first-line token - token: %s\n", token);
+            goto ERROR;
+        }
+        token = strtok (NULL, " ");
+    }
+    if (http->method == NULL || http->path == NULL || http->version == NULL)
+    {
+        ERROR_PRTF ("ERROR parse_http_header(): first-line - method: %s, path: %s, version: %s\n",
+                http->method? http->method : "NULL", http->path? http->path : "NULL", http->version? http->version : "NULL");
+        goto ERROR;
+    }
+
+    line = strtok(next_line, "\r\n");
+    next_line = line + strlen(line) + 1;
+    while (1)
+    {
+        token = strtok (line, ":");
+        if (token == NULL)
+        {
+            ERROR_PRTF ("ERROR parse_http_header(): field token - token: %s\n", token? token : "NULL");
+            goto ERROR;
+        }
+        char *field = token;
+        char *val = strtok (NULL, "\r\n");
+        while (val[0] == ' ')
+            val++;
+        if (add_field_to_http (http, field, val) == -1)
+        {
+            ERROR_PRTF ("ERROR parse_http_header(): add_field_to_http()\n");
+            goto ERROR;
+        }
+        line = strtok(next_line, "\r\n");
+        if (line == NULL)
+            break;
+        next_line = line + strlen(line) + 1;
+    }
+
+    return http;
+    ERROR:
+    free_http(http);
+    return NULL;
+}
+
+http_t *parse_multipart_content_body_ans (char** body_p, char* boundary, size_t body_size)
+{
+    if (body_p == NULL || boundary == NULL || body_size == 0 || *body_p == NULL)
+    {
+        ERROR_PRTF ("ERROR parse_multipart_content_body(): NULL parameter\n");
+        return NULL;
+    }
+    char *body = *body_p;
+    char *head_ptr = body, *eoh_ptr = body;
+    while (1)
+    {
+        if (strncmp (head_ptr, boundary, strlen(boundary)) == 0)
+        {
+            head_ptr += strlen(boundary);
+            if (strncmp (head_ptr, "--", 2) == 0)
+            {
+                *body_p = body + body_size;
+                return NULL;
+            }
+            head_ptr += 2;
+            break;
+        }
+        head_ptr++;
+        if (head_ptr - body >= body_size)
+        {
+            ERROR_PRTF ("ERROR parse_multipart_content_body(): boundary not found\n");
+            return NULL;
+        }
+    }
+
+    eoh_ptr = head_ptr;
+    while (strncmp (eoh_ptr, "\r\n\r\n", 4) != 0)
+    {
+        eoh_ptr++;
+        if (eoh_ptr - body >= body_size)
+        {
+            ERROR_PRTF ("ERROR parse_multipart_content_body(): end of header not found\n");
+            return NULL;
+        }
+    }
+    eoh_ptr += 4;
+    *(eoh_ptr - 1) = '\0';
+
+    http_t *http = init_http();
+    if (http == NULL)
+    {
+        ERROR_PRTF ("ERROR parse_multipart_content_body(): init_http()\n");
+        return NULL;
+    }
+
+    char *line = strtok(head_ptr, "\r\n");
+    char *next_line = line + strlen(line) + 1;
+    while (1)
+    {
+        char *token = strtok (line, ":");
+        if (token == NULL)
+        {
+            ERROR_PRTF ("ERROR parse_multipart_content_body(): field token - token: %s\n", token? token : "NULL");
+            goto ERROR;
+        }
+        char *field = token;
+        char *val = strtok (NULL, "\r\n");
+        while (val[0] == ' ')
+            val++;
+        if (add_field_to_http (http, field, val) == -1)
+        {
+            ERROR_PRTF ("ERROR parse_multipart_content_body(): add_field_to_http()\n");
+            goto ERROR;
+        }
+        line = strtok(next_line, "\r\n");
+        if (line == NULL)
+            break;
+        next_line = line + strlen(line) + 1;
+    }
+
+    head_ptr = eoh_ptr;
+    while (1)
+    {
+        if (head_ptr - body >= body_size || strncmp (head_ptr, boundary, strlen(boundary)) == 0)
+            break;
+        head_ptr++;
+    }
+    size_t data_size = head_ptr - eoh_ptr;
+    if (add_body_to_http (http, data_size, eoh_ptr) == -1)
+    {
+        ERROR_PRTF ("ERROR parse_multipart_content_body(): add_body_to_http()\n");
+        goto ERROR;
+    }
+
+    *body_p = head_ptr;
+    return http;
+    ERROR:
+    free_http(http);
+    return NULL;
+}
+
 int server_engine_ans (int server_port)
 {
     // Initialize server socket
@@ -82,6 +277,9 @@ int server_engine_ans (int server_port)
 // Returns -1 if error occurs, 0 otherwise.
 int server_routine_ans (int client_sock)
 {
+    if (client_sock == -1)
+        return -1;
+        
     size_t bytes_received = 0;
     char *http_version = "HTTP/1.0";
     char header_buffer[MAX_HTTP_MSG_HEADER_SIZE] = {0};
@@ -156,7 +354,7 @@ int server_routine_ans (int client_sock)
     else
     {
         // Parse the header of the client http message.
-        request = parse_http_header (header_buffer);
+        request = parse_http_header_ans (header_buffer);
         if (request == NULL)
         {
             ERROR_PRTF ("SERVER ERROR: Failed to parse HTTP header\n");
@@ -171,8 +369,10 @@ int server_routine_ans (int client_sock)
         {
             // Get /index.html when / is requested.
             if (strncmp (request->path, "/", 2) == 0)
+            {
+                free (request->path);
                 request->path = copy_string ("/index.html");
-
+            }
             // Check if the requested file needs authorization.
             // ID and password are "DCN" and "FALL2023"
             // Please do not change the ID and password when submitting.
@@ -298,7 +498,7 @@ int server_routine_ans (int client_sock)
             while (1)
             {
                 // Parse the request_body of the multipart content request_body.
-                http_t *body_part = parse_multipart_content_body (&body_ptr, boundary, 
+                http_t *body_part = parse_multipart_content_body_ans (&body_ptr, boundary, 
                     (request_body + body_len) - body_ptr);
                 if (body_ptr >= request_body + body_len)
                     break;

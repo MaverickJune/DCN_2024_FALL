@@ -23,14 +23,6 @@
 #define MAX_HTTP_MSG_HEADER_SIZE 8*1024 // Maximum size of HTTP header.
 #define DEFAULT_MAX_FIELD_NUM 8 
 
-int server_engine (int server_port);
-int server_routine (int server_port);
-
-int server_engine_ans (int server_port);
-int server_routine_ans (int client_sock);
-
-/// HTTP MANIPULATION ///
-
 // Struct for HTTP field.
 // All pointer locations should be dynamically allocated.
 typedef struct http_field_t
@@ -55,6 +47,25 @@ typedef struct http_t
     int max_field_count;
     http_field_t *fields;
 } http_t;
+
+
+// PROJECT 1 - HTTP SERVER: IMPLEMENT THESE TWO FUNCTIONS
+
+int server_engine (int server_port);
+int server_routine (int server_port);
+
+// You are NOT REQUIRED to implement and use parse_http_header().
+// However, if you do, you will be able to use the http struct and its member functions,
+// which will make things MUCH EASIER for you. We highly recommend you to do so.
+http_t *parse_http_header (char *request);
+
+// TA IMPLEMENTATIONS OF THE ABOVE FUNCTIONS
+
+int server_engine_ans (int server_port);
+int server_routine_ans (int client_sock);
+http_t *parse_http_header_ans (char *request);
+
+/// HTTP MANIPULATION ///
 
 // Create an empty HTTP struct
 // Returns NULL if not successful.
@@ -92,15 +103,6 @@ int add_body_to_http (http_t *http, size_t body_size, void *body_data);
 // Remove a body from HTTP struct.
 // Returns 0 if successful, -1 if not.
 int remove_body_from_http (http_t *http);
-
-// Parses a HTTP header string.
-// Returns parsed HTTP struct if successful, NULL if not.
-http_t *parse_http_header (char *request);
-
-// Parses a HTTP multipart content body string.
-// Returns parsed HTTP struct if successful, NULL if not.
-// Also updates the body pointer to point to the start of the next part.
-http_t *parse_multipart_content_body (char** body_p, char* boundary, size_t body_size);
 
 // Format HTTP struct to HTTP, and stores it a on buffer. 
 // Dynamically allocates memory for buffer.
