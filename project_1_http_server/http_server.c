@@ -7,6 +7,8 @@
 
 #include "http_functions.h"
 
+int server_engine_ans (int server_port);
+
 int main (int argc, char **argv)
 {
     // Parse inputs

@@ -28,14 +28,8 @@ torrent_engine_t *init_torrent_engine (int port)
         return NULL;
     }
     engine->port = port;
-    engine->listen_sock = listen_socket (port);
-    if (engine->listen_sock == -1)
-    {
-        ERROR_PRTF ("ERROR init_torrent_engine(): listen_socket() failed.\n");
-        free (engine);
-        return NULL;
-    }
-    size_t unique_val = getpid() + get_time_msec();
+    engine->listen_sock = -1;
+    size_t unique_val = getpid() + get_elapsed_msec();
     engine->engine_hash = get_hash (&unique_val, sizeof (size_t));
 
     engine->num_torrents = 0;
@@ -52,7 +46,7 @@ torrent_engine_t *init_torrent_engine (int port)
 
     engine->stop_engine = 0;
     pthread_mutex_init (&engine->mutex, NULL);
-    pthread_create (&engine->thread, NULL, torrent_engine_thread_wrapper, engine);
+    pthread_create (&engine->thread, NULL, torrent_engine_thread, engine);
 
     return engine;
 }
@@ -413,13 +407,13 @@ int main (int argc, char **argv)
         }
         else if (strncmp (cmd, "watch", 5) == 0 && strlen(cmd) < 6)
         {
-            size_t last_time = get_time_msec();
+            size_t last_time = get_elapsed_msec();
             int dots = 0;
             while (kbhit() == 0)
             {
-                if (get_time_msec() > last_time + WATCH_UPDATE_MSEC)
+                if (get_elapsed_msec() > last_time + WATCH_UPDATE_MSEC)
                 {
-                    last_time = get_time_msec();
+                    last_time = get_elapsed_msec();
                     UPDATE();
                     GOTO_X_Y (0, 0);
                     GREEN_PRTF ("WATCHING TORRENT");
@@ -545,13 +539,13 @@ int main (int argc, char **argv)
             HASH_t hash = torrent_engine->torrents[idx]->torrent_hash;
             pthread_mutex_unlock (&(torrent_engine->mutex));
             UPDATE();
-            size_t last_time = get_time_msec();
+            size_t last_time = get_elapsed_msec();
             int dots = 0;
             while (kbhit() == 0)
             {
-                if (get_time_msec() > last_time + WATCH_UPDATE_MSEC)
+                if (get_elapsed_msec() > last_time + WATCH_UPDATE_MSEC)
                 {
-                    last_time = get_time_msec();
+                    last_time = get_elapsed_msec();
                     UPDATE();
                     GOTO_X_Y (0, 0);
                     GREEN_PRTF ("WATCHING TORRENT");

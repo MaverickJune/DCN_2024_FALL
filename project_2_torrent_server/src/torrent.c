@@ -13,16 +13,29 @@
 
 //// MULTITHREADING FUNCTIONS ////
 
-void *torrent_engine_thread_wrapper (void *_engine)
+int torrent_client_ans (torrent_engine_t *engine);
+int torrent_server_ans (torrent_engine_t *engine);
+int listen_socket_ans (int port);
+
+void *torrent_engine_thread (void *_engine)
 {
     torrent_engine_t *engine = (torrent_engine_t *)_engine;
+    if (engine->listen_sock == -1)
+    {
+        engine->listen_sock = listen_socket_ans (engine->port);
+        if (engine->listen_sock == -1)
+        {
+            ERROR_PRTF ("ERROR torrent_engine_thread(): listen_socket_ans() failed.\n");
+            exit (EXIT_FAILURE);
+        }
+    }
     while (engine->stop_engine == 0)
     {
         pthread_mutex_lock (&engine->mutex);
-        torrent_client (engine);
-        size_t start_time = get_time_msec();
-        while (get_time_msec () < start_time + SERVER_TIME_MSEC)
-            torrent_server (engine);
+        torrent_client_ans (engine);
+        size_t start_time = get_elapsed_msec();
+        while (get_elapsed_msec () < start_time + SERVER_TIME_MSEC)
+            torrent_server_ans (engine);
         pthread_mutex_unlock (&engine->mutex);
         usleep ((rand() % RAND_WAIT_MSEC + 10) * 1000);
         if (print_info == 1)
@@ -31,6 +44,39 @@ void *torrent_engine_thread_wrapper (void *_engine)
             print_engine_status (engine);
         }
     }
+    return NULL;
+}
+
+void *request_torrent_info_thread_wrapper (void *_request_wrapper_data)
+{
+    request_wrapper_data_t *request_wrapper_data = (request_wrapper_data_t *)_request_wrapper_data;
+    request_torrent_info (request_wrapper_data->peer, request_wrapper_data->torrent);
+    free (request_wrapper_data);
+    return NULL;
+}
+
+void *request_torrent_peer_list_thread_wrapper (void *_request_wrapper_data)
+{
+    request_wrapper_data_t *request_wrapper_data = (request_wrapper_data_t *)_request_wrapper_data;
+    request_torrent_peer_list (request_wrapper_data->peer, request_wrapper_data->torrent);
+    free (request_wrapper_data);
+    return NULL;
+}
+
+void *request_torrent_block_status_thread_wrapper (void *_request_wrapper_data)
+{
+    request_wrapper_data_t *request_wrapper_data = (request_wrapper_data_t *)_request_wrapper_data;
+    request_torrent_block_status (request_wrapper_data->peer, request_wrapper_data->torrent);
+    free (request_wrapper_data);
+    return NULL;
+}
+
+void *request_torrent_block_thread_wrapper (void *_request_wrapper_data)
+{
+    request_wrapper_data_t *request_wrapper_data = (request_wrapper_data_t *)_request_wrapper_data;
+    request_torrent_block (request_wrapper_data->peer, request_wrapper_data->torrent, 
+            request_wrapper_data->block_index);
+    free (request_wrapper_data);
     return NULL;
 }
 
@@ -181,39 +227,6 @@ int request_torrent_block_thread (peer_data_t *peer, torrent_t *torrent, size_t 
         return -1;
     }
     return 0;
-}
-
-void *request_torrent_info_thread_wrapper (void *_request_wrapper_data)
-{
-    request_wrapper_data_t *request_wrapper_data = (request_wrapper_data_t *)_request_wrapper_data;
-    request_torrent_info (request_wrapper_data->peer, request_wrapper_data->torrent);
-    free (request_wrapper_data);
-    return NULL;
-}
-
-void *request_torrent_peer_list_thread_wrapper (void *_request_wrapper_data)
-{
-    request_wrapper_data_t *request_wrapper_data = (request_wrapper_data_t *)_request_wrapper_data;
-    request_torrent_peer_list (request_wrapper_data->peer, request_wrapper_data->torrent);
-    free (request_wrapper_data);
-    return NULL;
-}
-
-void *request_torrent_block_status_thread_wrapper (void *_request_wrapper_data)
-{
-    request_wrapper_data_t *request_wrapper_data = (request_wrapper_data_t *)_request_wrapper_data;
-    request_torrent_block_status (request_wrapper_data->peer, request_wrapper_data->torrent);
-    free (request_wrapper_data);
-    return NULL;
-}
-
-void *request_torrent_block_thread_wrapper (void *_request_wrapper_data)
-{
-    request_wrapper_data_t *request_wrapper_data = (request_wrapper_data_t *)_request_wrapper_data;
-    request_torrent_block (request_wrapper_data->peer, request_wrapper_data->torrent, 
-            request_wrapper_data->block_index);
-    free (request_wrapper_data);
-    return NULL;
 }
 
 //// TORRENT MANAGEMENT FUNCTIONS ////

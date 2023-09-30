@@ -209,69 +209,6 @@ http_t *parse_multipart_content_body_ans (char** body_p, char* boundary, size_t 
     return NULL;
 }
 
-int server_engine_ans (int server_port)
-{
-    // Initialize server socket
-    int server_listening_sock = socket(PF_INET, SOCK_STREAM, 0);
-    int val = 1;
-    setsockopt(server_listening_sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
-    if (server_listening_sock == -1)
-    {
-        ERROR_PRTF ("SERVER ERROR: setsocketopt() SO_REUSEADDR error\n");
-        return -1;
-    }
-
-    // Bind server socket to the given port
-    struct sockaddr_in server_addr_info;
-    memset(&server_addr_info, 0, sizeof(server_addr_info));
-    server_addr_info.sin_family = AF_INET;
-    server_addr_info.sin_port = htons(server_port);
-    server_addr_info.sin_addr.s_addr = htonl(INADDR_ANY);
-    if (bind(server_listening_sock, (struct sockaddr *)&server_addr_info, sizeof(server_addr_info)) == -1)
-    {
-        ERROR_PRTF ("SERVER ERROR: bind() error\n");
-        close (server_listening_sock);
-        return -1;
-    }
-
-    // Listen for incoming connections
-    if (listen(server_listening_sock, MAX_WAITING_CONNECTIONS) == -1)
-    {
-        ERROR_PRTF ("SERVER ERROR: listen() error\n");
-        close (server_listening_sock);
-        return -1;
-    }
-
-    // Serve incoming connections forever
-    while (1)
-    {
-        struct sockaddr_in client_addr_info;
-        socklen_t client_addr_info_len = sizeof(client_addr_info);
-        int client_connected_sock;
-
-        // Accept incoming connections
-        client_connected_sock = accept(server_listening_sock, (struct sockaddr *)&client_addr_info, &client_addr_info_len);
-        printf ("CLIENT ");
-        printf("%s:%d ", inet_ntoa(client_addr_info.sin_addr), ntohs(client_addr_info.sin_port));
-        GREEN_PRTF ("CONNECTED.\n");
-
-        if (client_connected_sock == -1)
-            ERROR_PRTF ("SERVER ERROR: Failed to accept an incoming connection\n");
-
-        // Serve the client
-        server_routine_ans (client_connected_sock);
-        
-        // Close the connection with the client
-        close(client_connected_sock);
-        printf ("CLIENT ");
-        printf ("%s:%d ", inet_ntoa(client_addr_info.sin_addr), ntohs(client_addr_info.sin_port));
-        GREEN_PRTF ("DISCONNECTED.\n\n");
-        fflush (stdout);
-    }
-    // Close the server socket
-    close(server_listening_sock);
-    return 0;
-}
 
 // Server routine for HTTP/1.0.
 // Returns -1 if error occurs, 0 otherwise.
@@ -615,4 +552,69 @@ int server_routine_ans (int client_sock)
     free_http (request);
     free_http (response);
     return -1;
+}
+
+
+int server_engine_ans (int server_port)
+{
+    // Initialize server socket
+    int server_listening_sock = socket(PF_INET, SOCK_STREAM, 0);
+    int val = 1;
+    setsockopt(server_listening_sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
+    if (server_listening_sock == -1)
+    {
+        ERROR_PRTF ("SERVER ERROR: setsocketopt() SO_REUSEADDR error\n");
+        return -1;
+    }
+
+    // Bind server socket to the given port
+    struct sockaddr_in server_addr_info;
+    memset(&server_addr_info, 0, sizeof(server_addr_info));
+    server_addr_info.sin_family = AF_INET;
+    server_addr_info.sin_port = htons(server_port);
+    server_addr_info.sin_addr.s_addr = htonl(INADDR_ANY);
+    if (bind(server_listening_sock, (struct sockaddr *)&server_addr_info, sizeof(server_addr_info)) == -1)
+    {
+        ERROR_PRTF ("SERVER ERROR: bind() error\n");
+        close (server_listening_sock);
+        return -1;
+    }
+
+    // Listen for incoming connections
+    if (listen(server_listening_sock, MAX_WAITING_CONNECTIONS) == -1)
+    {
+        ERROR_PRTF ("SERVER ERROR: listen() error\n");
+        close (server_listening_sock);
+        return -1;
+    }
+
+    // Serve incoming connections forever
+    while (1)
+    {
+        struct sockaddr_in client_addr_info;
+        socklen_t client_addr_info_len = sizeof(client_addr_info);
+        int client_connected_sock;
+
+        // Accept incoming connections
+        client_connected_sock = accept(server_listening_sock, (struct sockaddr *)&client_addr_info, &client_addr_info_len);
+        printf ("CLIENT ");
+        printf("%s:%d ", inet_ntoa(client_addr_info.sin_addr), ntohs(client_addr_info.sin_port));
+        GREEN_PRTF ("CONNECTED.\n");
+
+        if (client_connected_sock == -1)
+            ERROR_PRTF ("SERVER ERROR: Failed to accept an incoming connection\n");
+
+        // Serve the client
+        server_routine_ans (client_connected_sock);
+        
+        // Close the connection with the client
+        close(client_connected_sock);
+        printf ("CLIENT ");
+        printf ("%s:%d ", inet_ntoa(client_addr_info.sin_addr), ntohs(client_addr_info.sin_port));
+        GREEN_PRTF ("DISCONNECTED.\n\n");
+        fflush (stdout);
+    }
+    // Close the server socket
+    close(server_listening_sock);
+    return 0;
 }

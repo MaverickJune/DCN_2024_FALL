@@ -124,7 +124,7 @@ int server_routine (int client_sock)
         //       However, if you do, you will be able to use the http struct and its member functions,
         //       which will make things MUCH EASIER for you. We highly recommend you to do so.
 
-        request = parse_http_header_ans (header_buffer); // TODO: Change this to your implementation.
+        request = parse_http_header (header_buffer); // TODO: Change this to your implementation.
 
 
         // We must behave differently depending on the type of the request.
@@ -164,6 +164,18 @@ int server_routine (int client_sock)
             //       the start & the size of the body.
             //       Also, there might be some parts of the body that were received along with the header...
             //       Refer to https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST for more information.
+
+            // TODO: Parse each request_body of the multipart content request_body.
+
+            // TODO: Get the filename of the file.
+
+            // TODO: Check if the file is an image file.
+
+            // TODO: Save the file in the album.
+
+            // TODO: Append the appropriate html for the new image to album.html.
+
+            // TODO: Respond with a 200 OK.
 
         }
         else

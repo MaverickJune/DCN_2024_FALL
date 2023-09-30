@@ -59,12 +59,6 @@ int server_routine (int server_port);
 // which will make things MUCH EASIER for you. We highly recommend you to do so.
 http_t *parse_http_header (char *request);
 
-// TA IMPLEMENTATIONS OF THE ABOVE FUNCTIONS
-
-int server_engine_ans (int server_port);
-int server_routine_ans (int client_sock);
-http_t *parse_http_header_ans (char *request);
-
 /// HTTP MANIPULATION ///
 
 // Create an empty HTTP struct

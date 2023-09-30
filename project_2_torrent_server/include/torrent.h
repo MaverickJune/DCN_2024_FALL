@@ -34,7 +34,7 @@ extern int print_info;
 #define INFO_PRTF(...) {if (print_info){printf("\033[0;34m"); printf(__VA_ARGS__); printf("\033[0m");}}
 
 // Constants
-#define SERVER_TIME_MSEC 40
+#define SERVER_TIME_MSEC 200
 #define STR_LEN 64
 #define MSG_LEN (STR_LEN*4)
 #define BLOCK_SIZE (32*1024) // 32KiB
@@ -127,7 +127,7 @@ typedef struct request_wrapper_data_t
 
 //// MULTITHREADING FUNCTIONS ////
 
-void *torrent_engine_thread_wrapper (void *_engine);
+void *torrent_engine_thread (void *_engine);
 
 int request_torrent_info_thread (peer_data_t *peer, torrent_t *torrent);
 
@@ -136,14 +136,6 @@ int request_torrent_peer_list_thread (peer_data_t *peer, torrent_t *torrent);
 int request_torrent_block_status_thread (peer_data_t *peer, torrent_t *torrent);
 
 int request_torrent_block_thread (peer_data_t *peer, torrent_t *torrent, size_t block_index);
-
-void *request_torrent_info_thread_wrapper (void *_request_wrapper_data);
-
-void *request_torrent_peer_list_thread_wrapper (void *_request_wrapper_data);
-
-void *request_torrent_block_status_thread_wrapper (void *_request_wrapper_data);
-
-void *request_torrent_block_thread_wrapper (void *_request_wrapper_data);
 
 //// TORRENT MANAGEMENT FUNCTIONS ////
 
