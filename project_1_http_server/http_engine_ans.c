@@ -474,7 +474,6 @@ int server_routine_ans (int client_sock)
                     free_http (body_part);
                     goto EXIT;
                 }
-                free_http (body_part);
 
                 // Append the appropriate html for the new image to album.html.
                 size_t html_size = strlen (ALBUM_HTML_TEMPLATE) + strlen (filename)*2 + 1;
@@ -488,6 +487,7 @@ int server_routine_ans (int client_sock)
                 sprintf (html, ALBUM_HTML_TEMPLATE, filename, filename);
                 append_file (ALBUM_HTML_PATH , html, strlen (html));
                 free (html);
+                free_http (body_part);
             }
             free (request_body);
 
