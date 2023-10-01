@@ -273,7 +273,7 @@ int torrent_client (torrent_engine_t *engine)
 
             // TODO: If REQUEST_BLOCK_INTERVAL_MSEC has passed since last request, request a block.
             // HINT: Make sure to use request_torrent_block_thread() instead of request_torrent_block().
-
+            //       Use get_rand_missing_block_that_peer_has () function to randomly select a block to request.
         }
     }
 

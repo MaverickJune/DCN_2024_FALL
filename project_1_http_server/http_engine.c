@@ -10,6 +10,10 @@
 #define MAX_WAITING_CONNECTIONS 10 // Maximum number of waiting connections
 #define MAX_PATH_SIZE 256 // Maximum size of path
 #define SERVER_ROOT "./server_root"
+#define ALBUM_PATH "/public/album"
+#define ALBUM_HTML_PATH "./server_root/public/album/album_images.html"
+#define ALBUM_HTML_TEMPLATE "<div class=\"card\"> <img src=\"/public/album/%s\" alt=\"Unable to load %s\"> </div>\n"
+
 
 // You are NOT REQUIRED to implement and use parse_http_header() function for this project.
 // However, if you do, you will be able to use the http struct and its member functions,
@@ -77,7 +81,7 @@ int server_routine (int client_sock)
 
     // TODO: Receive the HEADER of the client http message.
     //       You have to consider the following cases:
-    //       1. End of header section is received (HINT: https://en.wikipedia.org/wiki/List_of_HTTP_header_fields)
+    //       1. End of header delimiter is received (HINT: https://en.wikipedia.org/wiki/List_of_HTTP_header_fields)
     //       2. Error occurs on read() (i.e. read() returns -1)
     //       3. Client disconnects (i.e. read() returns 0)
     //       4. MAX_HTTP_MSG_HEADER_SIZE is reached (i.e. message is too long)
@@ -173,7 +177,13 @@ int server_routine (int client_sock)
 
             // TODO: Save the file in the album.
 
-            // TODO: Append the appropriate html for the new image to album.html.
+            // Append the appropriate html for the new image to album.html.
+            char filename[MAX_PATH_SIZE] = "TODO: Change this to the filename of the image";
+            size_t html_append_size = strlen (ALBUM_HTML_TEMPLATE) + strlen (filename)*2 + 1;
+            char *html_append = (char *)calloc (1, html_append_size);
+            sprintf (html_append, ALBUM_HTML_TEMPLATE, filename, filename);
+            append_file (ALBUM_HTML_PATH , html_append, strlen (html_append));
+            free (html_append);
 
             // TODO: Respond with a 200 OK.
 
