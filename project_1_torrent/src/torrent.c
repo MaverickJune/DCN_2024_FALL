@@ -22,7 +22,7 @@ void *torrent_engine_thread (void *_engine)
     torrent_engine_t *engine = (torrent_engine_t *)_engine;
     if (engine->listen_sock == -1)
     {
-        engine->listen_sock = listen_socket_ans (engine->port);
+        engine->listen_sock = listen_socket (engine->port);
         if (engine->listen_sock == -1)
         {
             ERROR_PRTF ("ERROR torrent_engine_thread(): listen_socket_ans() failed.\n");
@@ -32,10 +32,10 @@ void *torrent_engine_thread (void *_engine)
     while (engine->stop_engine == 0)
     {
         pthread_mutex_lock (&engine->mutex);
-        torrent_client_ans (engine);
+        torrent_client (engine);
         size_t start_time = get_elapsed_msec();
         while (get_elapsed_msec () < start_time + SERVER_TIME_MSEC)
-            torrent_server_ans (engine);
+            torrent_server (engine);
         pthread_mutex_unlock (&engine->mutex);
         usleep ((rand() % RAND_WAIT_MSEC + 10) * 1000);
         if (print_info == 1)
