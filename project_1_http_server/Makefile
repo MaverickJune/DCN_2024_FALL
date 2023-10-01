@@ -2,10 +2,11 @@
 # Written by Jongseok Park (cakeng@snu.ac.kr)
 # 2023. 9. 11
 
+
 #### DO NOT MODIFY THIS FILE!! ####
 
 TARGET=http_server
-OBJECTS=http_util.o http_engine.o http_engine_ans.o
+OBJECTS=http_util.o http_engine.o
 
 CC=gcc
 
