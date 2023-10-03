@@ -1,4 +1,4 @@
-// NXC Data Communications torrent_engine.c for torrent
+// NXC Data Communications Network torrent_engine.c for BitTorrent-like P2P File Sharing System
 // Written by Jongseok Park (cakeng@snu.ac.kr)
 // 2023. 9. 19
 
@@ -302,6 +302,11 @@ int torrent_server (torrent_engine_t *engine)
     // TODO: Add peer to torrent if it doesn't exist.
 
     // TODO: Call different handler function based on message command.
+    // HINT: The handler functions take the engine, peer_sock, peer, torrent, and msg_body as arguments.
+    //       The engine, peer, torrent arguments refers to the torrent engine, 
+    //       peer that sent the message, and the torrent the message is about.
+    //       The peer_sock argument refers to the socket that the message was received from. (Return value of accept_socket ())
+    //       The msg_body argument refers to the part of the message after [TORRENT_HASH], excluding the space after [TORRENT_HASH], if it exists.
     
     return 0;
 }

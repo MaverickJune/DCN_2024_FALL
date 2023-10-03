@@ -1,4 +1,4 @@
-// NXC Data Communications torrent_ui.c for torrent
+// NXC Data Communications Network torrent_ui.c for torrent
 // Written by Jongseok Park (cakeng@snu.ac.kr)
 // 2023. 9. 19
 

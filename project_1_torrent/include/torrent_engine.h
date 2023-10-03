@@ -1,4 +1,4 @@
-// NXC Data Communications torrent_engine.h for torrent
+// NXC Data Communications Network torrent_engine.h for BitTorrent-like P2P File Sharing System
 // Written by Jongseok Park (cakeng@snu.ac.kr)
 // 2023. 9. 19
 
