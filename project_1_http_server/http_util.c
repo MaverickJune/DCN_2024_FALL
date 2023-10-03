@@ -657,12 +657,6 @@ ssize_t append_file (char *file_path, void *data, size_t size)
     return size;
 }
 
-
-void format_html_album (char *dir_path, char *html_path)
-{
-    
-}
-
 char *get_file_extension (char *file_path)
 {
     if (file_path == NULL)

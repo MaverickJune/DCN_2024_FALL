@@ -140,9 +140,6 @@ ssize_t write_file (char *file_path, void *data, size_t size);
 // Returns the size written if successful, -1 if not.
 ssize_t append_file (char *file_path, void *data, size_t size);
 
-// Format html album with all images in a directory.
-void format_html_album (char *dir_path, char *html_path);
-
 // Get file extension from file path. (ex. "index.html" -> "html", "image.jpg" -> "jpg")
 // Returns pointer to file extension if successful, NULL if not.
 // Does not include the dot, and does not allocate memory.
