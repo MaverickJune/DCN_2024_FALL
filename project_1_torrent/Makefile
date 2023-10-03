@@ -1,4 +1,4 @@
-# NXC Data Communications Network Makefile for HTTP server
+# NXC Data Communications Network Makefile for BitTorrent-like P2P File Sharing System
 # Written by Jongseok Park (cakeng@snu.ac.kr)
 # 2023. 9. 19
 
