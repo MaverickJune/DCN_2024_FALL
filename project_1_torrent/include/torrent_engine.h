@@ -93,7 +93,7 @@ int request_torrent_block (peer_data_t *peer, torrent_t *torrent, size_t block_i
 // Push my list of peers to a peer. 
 // Returns 0 on success, -1 on timeout, -2 on error.
 // Message protocol: 
-// PUSH_TORRENT_PEER_LIST [MY_ENGINE_HASH] [MY_LISTEN_PORT] [TORRENT_HASH] [NUM_PEERS] [PEER_0_IP]:[PEER_0_PORT] [PEE_1_IP]:[PEER_1_PORT] ...
+// PUSH_TORRENT_PEER_LIST [MY_ENGINE_HASH] [MY_LISTEN_PORT] [TORRENT_HASH] [NUM_PEERS] [PEER_0_IP]:[PEER_0_PORT] [PEER_1_IP]:[PEER_1_PORT] ...
 // [PEER_X_IP]:[PEER_X_PORT] is a list of peers, which starts AFTER MSG_LEN bytes in the message.
 // The list of peers is  [NUM_PEERS] * PEER_LIST_MAX_BYTE_PER_PEER bytes long, including the space.
 // Make sure not to send the IP and port of the receiving peer back to itself.
