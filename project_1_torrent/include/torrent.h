@@ -41,6 +41,9 @@ extern int print_info;
 #define DEFAULT_ARR_MAX_NUM 16
 #define TIMEOUT_MSEC 5
 #define HASH_SEED 0x12345678
+#ifndef SAVE_DIR
+#define SAVE_DIR "./torrents"
+#endif
 
 // Hash of value 0 is used to indicate an invalid hash.
 typedef uint32_t HASH_t;
