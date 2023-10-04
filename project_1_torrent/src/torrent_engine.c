@@ -373,9 +373,9 @@ int request_torrent_block (peer_data_t *peer, torrent_t *torrent, size_t block_i
 //       PUSH_TORRENT_PEER_LIST [MY_ENGINE_HASH] [MY_LISTEN_PORT] [TORRENT_HASH] [NUM_PEERS] [PEER_0_IP]:[PEER_0_PORT] [PEE_1_IP]:[PEER_1_PORT] ...
 //       [PEER_X_IP]:[PEER_X_PORT] is a list of peers, which starts AFTER MSG_LEN bytes in the message.
 // HINT: 1. Format message. 2. Connect to peer. 3. Send message. 4. Send peer list.
-//       The message is [MSG_LEN] bytes long, and the peer list starts AFTER MSG_LEN bytes in the message.
-//       The peer list is  [NUM_PEERS] * PEER_LIST_BYTE_PER_PEER bytes long, including the space.
-//       Make sure not to send the IP and port of the receiving peer back to itself.
+//       [PEER_X_IP]:[PEER_X_PORT] is a list of peers, which starts AFTER MSG_LEN bytes in the message.
+//       The peer list is  [NUM_PEERS] * PEER_LIST_MAX_BYTE_PER_PEER bytes long, including the space.
+//       Make sure NOT to send the IP and port of the receiving peer back to itself.
 //       Follow the example in push_torrent_info().
 int push_torrent_peer_list (peer_data_t *peer, torrent_t *torrent)
 {

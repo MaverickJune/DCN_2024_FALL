@@ -95,7 +95,7 @@ int request_torrent_block (peer_data_t *peer, torrent_t *torrent, size_t block_i
 // Message protocol: 
 // PUSH_TORRENT_PEER_LIST [MY_ENGINE_HASH] [MY_LISTEN_PORT] [TORRENT_HASH] [NUM_PEERS] [PEER_0_IP]:[PEER_0_PORT] [PEE_1_IP]:[PEER_1_PORT] ...
 // [PEER_X_IP]:[PEER_X_PORT] is a list of peers, which starts AFTER MSG_LEN bytes in the message.
-// Each the list of peers is  [NUM_PEERS] * PEER_LIST_BYTE_PER_PEER bytes long, including the space.
+// The list of peers is  [NUM_PEERS] * PEER_LIST_MAX_BYTE_PER_PEER bytes long, including the space.
 // Make sure not to send the IP and port of the receiving peer back to itself.
 int push_torrent_peer_list (peer_data_t *peer, torrent_t *torrent);
 
@@ -135,7 +135,7 @@ int handle_request_torrent_block (torrent_engine_t *engine, int peer_sock,
 // Returns 0 on success, -1 on error.
 // PUSH_TORRENT_PEER_LIST [MY_ENGINE_HASH] [MY_LISTEN_PORT] [TORRENT_HASH] [NUM_PEERS] [PEER_0_IP]:[PEER_0_PORT] [PEE_1_IP]:[PEER_1_PORT] ...
 // [PEER_X_IP]:[PEER_X_PORT] is a list of peers, which starts AFTER MSG_LEN bytes in the message.
-// Each the list of peers is  [NUM_PEERS] * PEER_LIST_BYTE_PER_PEER bytes long, including the space.
+// Each the list of peers is  [NUM_PEERS] * PEER_LIST_MAX_BYTE_PER_PEER bytes long, including the space.
 int handle_push_torrent_peer_list (torrent_engine_t *engine, int peer_sock, 
     peer_data_t *peer, torrent_t *torrent, char *msg_body);
 
