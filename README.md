@@ -9,6 +9,6 @@ Includes three socket applications:
 
 Please refer to the included "[Project 1] Socket Programming.pdf" for project details for the HTTP server and the torrent application.
 
-Answers are in commit [b7cc8fc81ffd7147b2b1cd50bb1645ead079c258](https://github.com/cakeng/DCN_2023/commit/b7cc8fc81ffd7147b2b1cd50bb1645ead079c258)
+Answers are in commit [b7cc8fc81ffd7147b2b1cd50bb1645ead079c258](https://github.com/cakeng/DCN_2023/tree/b7cc8fc81ffd7147b2b1cd50bb1645ead079c258)
 
 Last year's project is available at [https://github.com/cakeng/DCN_2022_FALL_Torrent](https://github.com/cakeng/DCN_2022_FALL_Torrent)
