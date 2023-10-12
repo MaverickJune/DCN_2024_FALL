@@ -12,10 +12,9 @@ http_t *init_http ()
     http_t *http = (http_t *) calloc(1, sizeof(http_t));
     if (http == NULL)
     {
-        ERROR_PRTF ("ERROR init_http_response(): calloc()\n");
+        ERROR_PRTF ("ERROR init_http_response(): calloc() (ERRNO %d:%s)\n", errno, strerror(errno));
         return NULL;
     }
-
     http->method = NULL;
     http->path = NULL;
     http->version = NULL;
@@ -25,13 +24,13 @@ http_t *init_http ()
     http->field_count = 0;
     http->max_field_count = DEFAULT_MAX_FIELD_NUM;
     http->fields = (http_field_t *) calloc(http->max_field_count, sizeof(http_field_t));
-    memset (http->fields, 0, http->max_field_count * sizeof(http_field_t));
     if (http->fields == NULL)
     {
-        ERROR_PRTF ("ERROR parse_http_header(): fields calloc()\n");
+        ERROR_PRTF ("ERROR parse_http_header(): fields calloc() (ERRNO %d:%s)\n", errno, strerror(errno));
         free_http (http);
         return NULL;
     }
+    memset (http->fields, 0, http->max_field_count * sizeof(http_field_t));
     return http;
 }
 
@@ -185,7 +184,7 @@ int add_field_to_http (http_t *http, char *field, char *val)
         http->fields = (http_field_t *) realloc(http->fields, http->max_field_count * sizeof(http_field_t));
         if (http->fields == NULL)
         {
-            ERROR_PRTF ("ERROR add_field_to_http(): fields realloc()\n");
+            ERROR_PRTF ("ERROR add_field_to_http(): fields realloc() (ERRNO %d:%s)\n", errno, strerror(errno));
             http->max_field_count /= 2;
             return -1;
         }
@@ -339,7 +338,7 @@ ssize_t write_http_to_buffer (http_t *http, void** buffer_ptr)
     *buffer_ptr = (void *) calloc(1, buffer_size);
     if (*buffer_ptr == NULL)
     {
-        ERROR_PRTF ("ERROR write_http_to_buffer(): buffer calloc()\n");
+        ERROR_PRTF ("ERROR write_http_to_buffer(): buffer calloc() (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     char *buffer = (char *) *buffer_ptr;
@@ -500,7 +499,7 @@ char *copy_string (char *string)
     char *copy = (char *) calloc(strlen(string) + 1, sizeof(char));
     if (copy == NULL)
     {
-        ERROR_PRTF ("ERROR copy_string(): calloc()\n");
+        ERROR_PRTF ("ERROR copy_string(): calloc() (ERRNO %d:%s)\n", errno, strerror(errno));
         return NULL;
     }
     strcpy(copy, string);
@@ -517,7 +516,7 @@ ssize_t write_bytes (int socket, void *buffer, size_t size)
         bytes_sent = write(socket, buffer, bytes_remaining);
         if (bytes_sent == -1)
         {
-            ERROR_PRTF ("ERROR write_bytes(): write() failed.\n");
+            ERROR_PRTF ("ERROR write_bytes(): write() failed. (ERRNO %d:%s)\n", errno, strerror(errno));
             return -1;
         }
         bytes_remaining -= bytes_sent;
@@ -535,7 +534,7 @@ ssize_t read_bytes (int socket, void *buffer, size_t size)
         bytes_received = read(socket, buffer, bytes_remaining);
         if (bytes_received == -1)
         {
-            ERROR_PRTF ("ERROR read_bytes(): read() failed.\n");
+            ERROR_PRTF ("ERROR read_bytes(): read() failed. (ERRNO %d:%s)\n", errno, strerror(errno));
             return -1;
         }
         bytes_remaining -= bytes_received;
@@ -555,7 +554,7 @@ ssize_t read_file (void** output, char *file_path)
     FILE *fp = fopen(file_path, "rb");
     if (fp == NULL)
     {
-        ERROR_PRTF ("ERROR read_file(): file does not exist.\n");
+        ERROR_PRTF ("ERROR read_file(): file does not exist. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
 
@@ -577,14 +576,14 @@ ssize_t read_file (void** output, char *file_path)
     *output = (void *) malloc(file_size);
     if (*output == NULL)
     {
-        ERROR_PRTF ("ERROR read_file(): malloc()\n");
+        ERROR_PRTF ("ERROR read_file(): malloc() (ERRNO %d:%s)\n", errno, strerror(errno));
         fclose(fp);
         return -1;
     }
 
     if (fread(*output, 1, file_size, fp) != file_size)
     {
-        ERROR_PRTF ("ERROR read_file(): fread()\n");
+        ERROR_PRTF ("ERROR read_file(): fread() (ERRNO %d:%s)\n", errno, strerror(errno));
         fclose(fp);
         free (*output);
         return -1;
@@ -605,8 +604,7 @@ ssize_t write_file (char *file_path, void *data, size_t size)
     FILE *fp = fopen(file_path, "wb");
     if (fp == NULL)
     {
-        ERROR_PRTF ("ERROR write_file(): fopen()\n");
-        ERROR_PRTF ("ERRNO: %d (%s)\n", errno, strerror(errno));
+        ERROR_PRTF ("ERROR write_file(): fopen() (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
 
@@ -618,7 +616,7 @@ ssize_t write_file (char *file_path, void *data, size_t size)
 
     if (fwrite(data, 1, size, fp) != size)
     {
-        ERROR_PRTF ("ERROR write_file(): fwrite()\n");
+        ERROR_PRTF ("ERROR write_file(): fwrite() (ERRNO %d:%s)\n", errno, strerror(errno));
         fclose(fp);
         return -1;
     }
@@ -638,7 +636,7 @@ ssize_t append_file (char *file_path, void *data, size_t size)
     FILE *fp = fopen(file_path, "ab");
     if (fp == NULL)
     {
-        ERROR_PRTF ("ERROR append_file(): fopen()\n");
+        ERROR_PRTF ("ERROR append_file(): fopen() (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
 
@@ -650,7 +648,7 @@ ssize_t append_file (char *file_path, void *data, size_t size)
 
     if (fwrite(data, 1, size, fp) != size)
     {
-        ERROR_PRTF ("ERROR append_file(): fwrite()\n");
+        ERROR_PRTF ("ERROR append_file(): fwrite() (ERRNO %d:%s)\n", errno, strerror(errno));
         fclose(fp);
         return -1;
     }

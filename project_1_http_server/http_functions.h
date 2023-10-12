@@ -19,7 +19,7 @@
 #define RED_PRTF(...) {printf("\033[0;31m"); printf(__VA_ARGS__); printf("\033[0m");}
 #define GREEN_PRTF(...) {printf("\033[0;32m"); printf(__VA_ARGS__); printf("\033[0m");}
 #define YELLOW_PRTF(...) {printf("\033[0;33m"); printf(__VA_ARGS__); printf("\033[0m");}
-#define ERROR_PRTF(...) {fprintf(stderr, "\033[0;31m"); fprintf(stderr, "\t(%s:%d)", __FILE__, __LINE__); fprintf(stderr, __VA_ARGS__); fprintf (stderr, "\t(ERRNO %d: %s)\n", errno, strerror(errno)); fprintf(stderr, "\033[0m");}
+#define ERROR_PRTF(...) {fprintf(stderr, "\033[0;31m"); fprintf(stderr, "\t(%s:%d) ", __FILE__, __LINE__); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\033[0m");}
 
 #define MAX_HTTP_MSG_HEADER_SIZE 8*1024 // Maximum size of HTTP header.
 #define DEFAULT_MAX_FIELD_NUM 8 

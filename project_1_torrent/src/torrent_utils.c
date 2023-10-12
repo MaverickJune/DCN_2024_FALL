@@ -185,7 +185,7 @@ ssize_t read_file (char *path, void *data)
     FILE *fp = fopen (path, "rb");
     if (fp == NULL)
     {
-        ERROR_PRTF ("ERROR read_file(): fopen failed.\n");
+        ERROR_PRTF ("ERROR read_file(): fopen failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
         
@@ -195,7 +195,7 @@ ssize_t read_file (char *path, void *data)
 
     if (fread (data, 1, len, fp) != len)
     {
-        ERROR_PRTF ("ERROR read_file(): fread failed.\n");
+        ERROR_PRTF ("ERROR read_file(): fread failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         fclose (fp);
         return -1;
     }
@@ -209,7 +209,7 @@ ssize_t get_file_size (char *path)
     FILE *fp = fopen (path, "rb");
     if (fp == NULL)
     {
-        ERROR_PRTF ("ERROR read_file(): fopen failed.\n");
+        ERROR_PRTF ("ERROR read_file(): fopen failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
 
@@ -230,7 +230,7 @@ ssize_t write_bytes (int socket, void *buffer, size_t size)
         bytes_sent = write(socket, buffer, bytes_remaining);
         if (bytes_sent == -1)
         {
-            ERROR_PRTF ("ERROR write_bytes(): write failed.\n");
+            ERROR_PRTF ("ERROR write_bytes(): write failed. (ERRNO %d:%s)\n", errno, strerror(errno));
             return -1;
         }
         bytes_remaining -= bytes_sent;
@@ -248,7 +248,7 @@ ssize_t read_bytes (int socket, void *buffer, size_t size)
         bytes_received = read(socket, buffer, bytes_remaining);
         if (bytes_received == -1)
         {
-            ERROR_PRTF ("ERROR read_bytes(): read failed\n");
+            ERROR_PRTF ("ERROR read_bytes(): read failed (ERRNO %d:%s)\n", errno, strerror(errno));
             return -1;
         }
         bytes_remaining -= bytes_received;
@@ -272,7 +272,7 @@ int kbhit()
 
     if (ret == -1)
     {
-        ERROR_PRTF ("ERROR kbhit(): poll failed.\n");
+        ERROR_PRTF ("ERROR kbhit(): poll failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return 0;
     }
     

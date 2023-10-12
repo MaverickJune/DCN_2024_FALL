@@ -24,7 +24,7 @@ torrent_engine_t *init_torrent_engine (int port)
     torrent_engine_t *engine = calloc (1, sizeof (torrent_engine_t));
     if (engine == NULL)
     {
-        ERROR_PRTF ("ERROR init_torrent_engine(): calloc failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_engine(): calloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return NULL;
     }
     engine->port = port;
@@ -37,7 +37,7 @@ torrent_engine_t *init_torrent_engine (int port)
     engine->torrents = calloc (engine->max_num_torrents, sizeof (torrent_t*));
     if (engine->torrents == NULL)
     {
-        ERROR_PRTF ("ERROR init_torrent_engine(): torrents calloc failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_engine(): torrents calloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         destroy_torrent_engine (engine);
         return NULL;
     }

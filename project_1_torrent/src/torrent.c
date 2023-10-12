@@ -87,7 +87,7 @@ int request_torrent_info_thread (peer_data_t *peer, torrent_t *torrent)
     request_wrapper_data_t *request_wrapper_data = calloc (1, sizeof (request_wrapper_data_t));
     if (request_wrapper_data == NULL)
     {
-        ERROR_PRTF ("ERROR request_torrent_info_thread(): calloc failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_info_thread(): calloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     request_wrapper_data->peer = peer;
@@ -95,23 +95,23 @@ int request_torrent_info_thread (peer_data_t *peer, torrent_t *torrent)
     request_wrapper_data->block_index = 0;
     if (pthread_attr_init(&attr) != 0 )
     {
-        ERROR_PRTF ("ERROR request_torrent_info_thread(): pthread_attr_init failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_info_thread(): pthread_attr_init failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) != 0 )
     {
-        ERROR_PRTF ("ERROR request_torrent_info_thread(): pthread_attr_setdetachstate failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_info_thread(): pthread_attr_setdetachstate failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     if (pthread_create (&request_thread, &attr, request_torrent_info_thread_wrapper, 
             (void *)request_wrapper_data) != 0)
     {
-        ERROR_PRTF ("ERROR request_torrent_info_thread(): pthread_create failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_info_thread(): pthread_create failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     if (pthread_attr_destroy(&attr) != 0)
     {
-        ERROR_PRTF ("ERROR request_torrent_info_thread(): pthread_attr_destroy failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_info_thread(): pthread_attr_destroy failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
 
@@ -125,7 +125,7 @@ int request_torrent_peer_list_thread (peer_data_t *peer, torrent_t *torrent)
     request_wrapper_data_t *request_wrapper_data = calloc (1, sizeof (request_wrapper_data_t));
     if (request_wrapper_data == NULL)
     {
-        ERROR_PRTF ("ERROR request_torrent_peer_list_thread(): calloc failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_peer_list_thread(): calloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     request_wrapper_data->peer = peer;
@@ -133,23 +133,23 @@ int request_torrent_peer_list_thread (peer_data_t *peer, torrent_t *torrent)
     request_wrapper_data->block_index = 0;
     if (pthread_attr_init(&attr) != 0 )
     {
-        ERROR_PRTF ("ERROR request_torrent_peer_list_thread(): pthread_attr_init failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_peer_list_thread(): pthread_attr_init failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) != 0 )
     {
-        ERROR_PRTF ("ERROR request_torrent_peer_list_thread(): pthread_attr_setdetachstate failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_peer_list_thread(): pthread_attr_setdetachstate failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     if (pthread_create (&request_thread, NULL, request_torrent_peer_list_thread_wrapper, 
             (void *)request_wrapper_data) != 0)
     {
-        ERROR_PRTF ("ERROR request_torrent_peer_list_thread(): pthread_create failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_peer_list_thread(): pthread_create failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     if (pthread_attr_destroy(&attr) != 0)
     {
-        ERROR_PRTF ("ERROR request_torrent_peer_list_thread(): pthread_attr_destroy failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_peer_list_thread(): pthread_attr_destroy failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     return 0;
@@ -162,7 +162,7 @@ int request_torrent_block_status_thread (peer_data_t *peer, torrent_t *torrent)
     request_wrapper_data_t *request_wrapper_data = calloc (1, sizeof (request_wrapper_data_t));
     if (request_wrapper_data == NULL)
     {
-        ERROR_PRTF ("ERROR request_torrent_block_status_thread(): calloc failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_block_status_thread(): calloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     request_wrapper_data->peer = peer;
@@ -170,23 +170,23 @@ int request_torrent_block_status_thread (peer_data_t *peer, torrent_t *torrent)
     request_wrapper_data->block_index = 0;
     if (pthread_attr_init(&attr) != 0 )
     {
-        ERROR_PRTF ("ERROR request_torrent_block_status_thread(): pthread_attr_init failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_block_status_thread(): pthread_attr_init failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) != 0 )
     {
-        ERROR_PRTF ("ERROR request_torrent_block_status_thread(): pthread_attr_setdetachstate failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_block_status_thread(): pthread_attr_setdetachstate failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     if (pthread_create (&request_thread, NULL, request_torrent_block_status_thread_wrapper, 
             (void *)request_wrapper_data) != 0)
     {
-        ERROR_PRTF ("ERROR request_torrent_block_status_thread(): pthread_create failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_block_status_thread(): pthread_create failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     if (pthread_attr_destroy(&attr) != 0)
     {
-        ERROR_PRTF ("ERROR request_torrent_block_status_thread(): pthread_attr_destroy failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_block_status_thread(): pthread_attr_destroy failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     return 0;
@@ -199,7 +199,7 @@ int request_torrent_block_thread (peer_data_t *peer, torrent_t *torrent, size_t 
     request_wrapper_data_t *request_wrapper_data = calloc (1, sizeof (request_wrapper_data_t));
     if (request_wrapper_data == NULL)
     {
-        ERROR_PRTF ("ERROR request_torrent_block_thread(): calloc failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_block_thread(): calloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     request_wrapper_data->peer = peer;
@@ -207,23 +207,23 @@ int request_torrent_block_thread (peer_data_t *peer, torrent_t *torrent, size_t 
     request_wrapper_data->block_index = block_index;
     if (pthread_attr_init(&attr) != 0 )
     {
-        ERROR_PRTF ("ERROR request_torrent_block_thread(): pthread_attr_init failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_block_thread(): pthread_attr_init failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) != 0 )
     {
-        ERROR_PRTF ("ERROR request_torrent_block_thread(): pthread_attr_setdetachstate failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_block_thread(): pthread_attr_setdetachstate failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     if (pthread_create (&request_thread, NULL, request_torrent_block_thread_wrapper, 
             (void *)request_wrapper_data) != 0)
     {
-        ERROR_PRTF ("ERROR request_torrent_block_thread(): pthread_create failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_block_thread(): pthread_create failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     if (pthread_attr_destroy(&attr) != 0)
     {
-        ERROR_PRTF ("ERROR request_torrent_block_thread(): pthread_attr_destroy failed.\n");
+        ERROR_PRTF ("ERROR request_torrent_block_thread(): pthread_attr_destroy failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     return 0;
@@ -236,7 +236,7 @@ torrent_t *init_torrent (torrent_engine_t *engine)
     torrent_t *torrent = calloc (1, sizeof (torrent_t));
     if (torrent == NULL)
     {
-        ERROR_PRTF ("ERROR init_torrent(): calloc failed.\n");
+        ERROR_PRTF ("ERROR init_torrent(): calloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return NULL;
     }
     torrent->engine = engine;
@@ -260,7 +260,7 @@ torrent_t *init_torrent (torrent_engine_t *engine)
     torrent->peers = calloc (torrent->max_num_peers, sizeof (peer_data_t*));
     if (torrent->peers == NULL)
     {
-        ERROR_PRTF ("ERROR init_torrent(): peers calloc failed.\n");
+        ERROR_PRTF ("ERROR init_torrent(): peers calloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         destroy_torrent (torrent);
         return NULL;
     }
@@ -347,14 +347,14 @@ int set_torrent_info (torrent_t *torrent, char *torrent_name, size_t file_size)
     torrent->data = calloc (torrent->num_blocks, BLOCK_SIZE);
     if (torrent->data == NULL)
     {
-        ERROR_PRTF ("ERROR init_torrent_from_file(): data calloc failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_file(): data calloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     
     torrent->block_hashes = calloc (torrent->num_blocks, sizeof (HASH_t));
     if (torrent->block_hashes == NULL)
     {
-        ERROR_PRTF ("ERROR init_torrent_from_file(): block_hashes calloc failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_file(): block_hashes calloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         free (torrent->data);
         torrent->data = NULL;
         return -1;
@@ -363,7 +363,7 @@ int set_torrent_info (torrent_t *torrent, char *torrent_name, size_t file_size)
     torrent->block_status = calloc (torrent->num_blocks, sizeof (B_STAT));
     if (torrent->block_status == NULL)
     {
-        ERROR_PRTF ("ERROR init_torrent_from_file(): block_status calloc failed.\n");
+        ERROR_PRTF ("ERROR init_torrent_from_file(): block_status calloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         free (torrent->data);
         free (torrent->block_hashes);
         torrent->data = NULL;
@@ -458,7 +458,7 @@ int save_torrent_as_file (torrent_t *torrent)
     {
         if (mkdir (path, 0700) == -1)
         {
-            ERROR_PRTF ("ERROR save_torrent_as_file(): mkdir failed.\n");
+            ERROR_PRTF ("ERROR save_torrent_as_file(): mkdir failed. (ERRNO %d:%s)\n", errno, strerror(errno));
             return -1;
         }
     }
@@ -468,7 +468,7 @@ int save_torrent_as_file (torrent_t *torrent)
     {
         if (mkdir (path, 0700) == -1)
         {
-            ERROR_PRTF ("ERROR save_torrent_as_file(): mkdir failed.\n");
+            ERROR_PRTF ("ERROR save_torrent_as_file(): mkdir failed. (ERRNO %d:%s)\n", errno, strerror(errno));
             return -1;
         }
     }
@@ -484,12 +484,12 @@ int save_torrent_as_file (torrent_t *torrent)
     FILE *fp = fopen (path, "wb");
     if (fp == NULL)
     {
-        ERROR_PRTF ("ERROR save_torrent_as_file(): fopen failed.\n");
+        ERROR_PRTF ("ERROR save_torrent_as_file(): fopen failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return -1;
     }
     if (fwrite (torrent->data, 1, torrent->file_size, fp) != torrent->file_size)
     {
-        ERROR_PRTF ("ERROR save_torrent_as_file(): fwrite failed.\n");
+        ERROR_PRTF ("ERROR save_torrent_as_file(): fwrite failed. (ERRNO %d:%s)\n", errno, strerror(errno));;
         fclose (fp);
         return -1;
     }
@@ -675,7 +675,7 @@ int update_if_max_torrent_reached (torrent_engine_t *engine)
         engine->torrents = realloc (engine->torrents, engine->max_num_torrents * sizeof (torrent_t*));
         if (engine->torrents == NULL)
         {
-            ERROR_PRTF ("ERROR update_if_max_torrent_reached(): realloc failed.\n");
+            ERROR_PRTF ("ERROR update_if_max_torrent_reached(): realloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
             return -1;
         }
         for (size_t i = engine->num_torrents; i < engine->max_num_torrents; i++)
@@ -689,7 +689,7 @@ peer_data_t *init_peer_data (torrent_t *torrent)
     peer_data_t *peer_data = calloc (1, sizeof (peer_data_t));
     if (peer_data == NULL)
     {
-        ERROR_PRTF ("ERROR init_peer_data(): calloc failed.\n");
+        ERROR_PRTF ("ERROR init_peer_data(): calloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         return NULL;
     }
     peer_data->torrent = torrent;
@@ -730,7 +730,7 @@ int set_peer_block_info (peer_data_t *peer_data)
     peer_data->block_status = calloc (torrent->num_blocks, sizeof (B_STAT));
     if (peer_data->block_status == NULL)
     {
-        ERROR_PRTF ("ERROR init_peer_data(): block_status calloc failed.\n");
+        ERROR_PRTF ("ERROR init_peer_data(): block_status calloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
         destroy_peer_data (peer_data);
         return -1;
     }
@@ -843,7 +843,7 @@ int update_if_max_peer_reached (torrent_t *torrent)
         torrent->peers = realloc (torrent->peers, torrent->max_num_peers * sizeof (peer_data_t*));
         if (torrent->peers == NULL)
         {
-            ERROR_PRTF ("ERROR update_if_max_peer_reached(): realloc failed.\n");
+            ERROR_PRTF ("ERROR update_if_max_peer_reached(): realloc failed. (ERRNO %d:%s)\n", errno, strerror(errno));
             return -1;
         }
         for (size_t i = torrent->num_peers; i < torrent->max_num_peers; i++)
