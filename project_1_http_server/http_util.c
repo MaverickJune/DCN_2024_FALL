@@ -606,6 +606,7 @@ ssize_t write_file (char *file_path, void *data, size_t size)
     if (fp == NULL)
     {
         ERROR_PRTF ("ERROR write_file(): fopen()\n");
+        ERROR_PRTF ("ERRNO: %d (%s)\n", errno, strerror(errno));
         return -1;
     }
 
