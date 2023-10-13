@@ -6,7 +6,7 @@
 #### DO NOT MODIFY THIS FILE!! ####
 
 TARGET=torrent
-OBJECTS=torrent.o torrent_engine.o torrent_ui.o torrent_utils.o
+OBJECTS=torrent.o torrent_engine.o torrent_ui.o torrent_utils.o torrent_engine_ans.o
 SAVE_DIR=./torrents
 
 CC=gcc

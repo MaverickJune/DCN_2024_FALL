@@ -22,7 +22,8 @@ void *torrent_engine_thread (void *_engine)
     torrent_engine_t *engine = (torrent_engine_t *)_engine;
     if (engine->listen_sock == -1)
     {
-        engine->listen_sock = listen_socket (engine->port);
+        // Change this line to listen_socket() to test your implementation
+        engine->listen_sock = listen_socket_ans (engine->port);
         if (engine->listen_sock == -1)
         {
             ERROR_PRTF ("ERROR torrent_engine_thread(): listen_socket_ans() failed.\n");
@@ -32,15 +33,20 @@ void *torrent_engine_thread (void *_engine)
     while (engine->stop_engine == 0)
     {
         pthread_mutex_lock (&engine->mutex);
-        torrent_client (engine);
+
+        // Change this line to torrent_client() to test your implementation
+        torrent_client_ans (engine);
         size_t start_time = get_elapsed_msec();
         while (get_elapsed_msec () < start_time + SERVER_TIME_MSEC)
-            torrent_server (engine);
+            // Change this line to torrent_server() to test your implementation
+            torrent_server_ans (engine);
+
         pthread_mutex_unlock (&engine->mutex);
+
         usleep ((rand() % RAND_WAIT_MSEC + 10) * 1000);
         if (print_info == 1)
         {
-            INFO_PRTF ("\t[%04.3fs] ENGINE REV COMPLETE.\n", (double)get_elapsed_msec()/1000);
+            INFO_PRTF ("ENGINE REV COMPLETE.\n");
             print_engine_status (engine);
         }
     }
@@ -474,12 +480,10 @@ int save_torrent_as_file (torrent_t *torrent)
     }
 
     strcat (path, torrent->torrent_name);
-    INFO_PRTF ("\t[%04.3fs] SAVING 0x%08x TO %s.\n", (double)get_elapsed_msec()/1000, 
-            torrent->torrent_hash, path);
+    INFO_PRTF ("SAVING 0x%08x TO %s.\n", torrent->torrent_hash, path);
     if (torrent->torrent_hash != get_hash (torrent->data, torrent->file_size))
-        INFO_PRTF ("\t[%04.3fs] WARNING: SAVE OUTPUT HASH 0x%08x DOES NOT MATCH 0x%08x.\n", 
-                (double)get_elapsed_msec()/1000, 
-                    get_hash (torrent->data, torrent->file_size), torrent->torrent_hash);
+        INFO_PRTF ("WARNING: SAVE OUTPUT HASH 0x%08x DOES NOT MATCH 0x%08x.\n", 
+                get_hash (torrent->data, torrent->file_size), torrent->torrent_hash);
 
     FILE *fp = fopen (path, "wb");
     if (fp == NULL)

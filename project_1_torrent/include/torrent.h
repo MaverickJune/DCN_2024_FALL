@@ -32,7 +32,7 @@ extern int print_info;
 #define GREEN_PRTF(...) {printf("\033[0;32m"); printf(__VA_ARGS__); printf("\033[0m");}
 #define YELLOW_PRTF(...) {printf("\033[0;33m"); printf(__VA_ARGS__); printf("\033[0m");}
 #define ERROR_PRTF(...) {fprintf(stderr, "\033[0;31m"); fprintf(stderr, "\t(%s:%d) ", __FILE__, __LINE__); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\033[0m");}
-#define INFO_PRTF(...) {if (print_info){printf("\033[0;34m"); printf(__VA_ARGS__); printf("\033[0m");}}
+#define INFO_PRTF(...) {if (print_info){printf("\033[0;34m"); printf ("\t[%04.3fs] ", (double)get_elapsed_msec()/1000); printf(__VA_ARGS__); printf("\033[0m");}}
 
 // Constants
 #define SERVER_TIME_MSEC 200

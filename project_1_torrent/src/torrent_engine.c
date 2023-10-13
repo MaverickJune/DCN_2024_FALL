@@ -33,8 +33,7 @@ int request_torrent_info (peer_data_t *peer, torrent_t *torrent)
     int peer_sock = connect_socket (peer->ip, peer->port);
     if (peer_sock == -1)
     {
-        INFO_PRTF ("\t[%04.3fs] REQUESTING 0x%08x INFO FROM %s:%d - TIMEOUT.\n", (double)get_elapsed_msec()/1000, 
-            torrent->torrent_hash, peer->ip, peer->port);
+        INFO_PRTF ("REQUESTING 0x%08x INFO FROM %s:%d - TIMEOUT.\n", torrent->torrent_hash, peer->ip, peer->port);
         return -1;
     }
     else if (peer_sock < -1)
@@ -43,8 +42,7 @@ int request_torrent_info (peer_data_t *peer, torrent_t *torrent)
         return -2;
     }
 
-    INFO_PRTF ("\t[%04.3fs] REQUESTING 0x%08x INFO FROM %s:%d.\n", (double)get_elapsed_msec()/1000, 
-        torrent->torrent_hash, peer->ip, peer->port);
+    INFO_PRTF ("REQUESTING 0x%08x INFO FROM %s:%d.\n", torrent->torrent_hash, peer->ip, peer->port);
 
     // Send message.
     if (write_bytes (peer_sock, msg, MSG_LEN) != MSG_LEN)
@@ -79,8 +77,7 @@ int push_torrent_info (peer_data_t *peer, torrent_t *torrent)
     int peer_sock = connect_socket (peer->ip, peer->port);
     if (peer_sock == -1)
     {
-        INFO_PRTF ("\t[%04.3fs] PUSHING 0x%08x INFO TO %s:%d - TIMEOUT.\n", (double)get_elapsed_msec()/1000, 
-            torrent->torrent_hash, peer->ip, peer->port);
+        INFO_PRTF ("PUSHING 0x%08x INFO TO %s:%d - TIMEOUT.\n", torrent->torrent_hash, peer->ip, peer->port);
         return -1;
     }
     else if (peer_sock < -1)
@@ -89,8 +86,7 @@ int push_torrent_info (peer_data_t *peer, torrent_t *torrent)
         return -2;
     }
 
-    INFO_PRTF ("\t[%04.3fs] PUSHING 0x%08x INFO TO %s:%d.\n", (double)get_elapsed_msec()/1000, 
-        torrent->torrent_hash, peer->ip, peer->port);
+    INFO_PRTF ("PUSHING 0x%08x INFO TO %s:%d.\n", torrent->torrent_hash, peer->ip, peer->port);
 
     // Send message.
     if (write_bytes (peer_sock, msg, MSG_LEN) != MSG_LEN)
@@ -140,8 +136,7 @@ int handle_request_torrent_info (torrent_engine_t *engine, int peer_sock,
         return -1;
     }
 
-    INFO_PRTF ("\t[%04.3fs] RECEIVED REQUEST FOR 0x%08x INFO FROM %s:%d\n", (double)get_elapsed_msec()/1000,
-        torrent->torrent_hash, peer->ip, peer->port);
+    INFO_PRTF ("RECEIVED REQUEST FOR 0x%08x INFO FROM %s:%d\n", torrent->torrent_hash, peer->ip, peer->port);
 
     // If torrent info exists, Push torrent info to peer.
     if (is_torrent_info_set (torrent) == 1 && push_torrent_info (peer, torrent) < -1)
@@ -191,8 +186,8 @@ int handle_push_torrent_info (torrent_engine_t *engine, int peer_sock,
         return -1;
     }
 
-    INFO_PRTF ("\t[%04.3fs] RECEIVED PUSH FOR 0x%08x INFO FROM %s:%d- NAME: %s, SIZE: %ld\n"
-        , (double)get_elapsed_msec()/1000, torrent->torrent_hash, peer->ip, peer->port, torrent_name, file_size);
+    INFO_PRTF ("RECEIVED PUSH FOR 0x%08x INFO FROM %s:%d- NAME: %s, SIZE: %ld\n"
+        , torrent->torrent_hash, peer->ip, peer->port, torrent_name, file_size);
 
     // Check if torrent already has info.
     if (is_torrent_info_set (torrent) == 1)
