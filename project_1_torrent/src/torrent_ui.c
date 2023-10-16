@@ -198,7 +198,7 @@ void print_engine_status (torrent_engine_t *engine)
         printf ("STATUS: ");
         if (is_torrent_info_set (torrent) == 0)
             RED_PRTF ("NO INFO\n")
-        else if (get_num_completed_blocks (torrent) == torrent->num_blocks)
+        else if (get_num_downloaded_blocks (torrent) == torrent->num_blocks)
             GREEN_PRTF ("COMPLETED\n")
         else
             YELLOW_PRTF ("DOWNLOADING\n")
@@ -210,7 +210,7 @@ void print_engine_status (torrent_engine_t *engine)
         else
             printf ("%ld B", torrent->file_size);
         printf (", BLOCKS: %ld/%ld, NUM PEERS: %ld, SPEED: %.2f KiB/s\n",
-            get_num_completed_blocks(torrent), torrent->num_blocks, torrent->num_peers, 
+            get_num_downloaded_blocks(torrent), torrent->num_blocks, torrent->num_peers, 
                 (double)get_torrent_download_speed(torrent)/1024.0);
         if (torrent->num_peers != 0)
         {
@@ -218,7 +218,7 @@ void print_engine_status (torrent_engine_t *engine)
             for (size_t j = 0; j < torrent->num_peers; j++)
             {
                 printf ("%s:%d (%ld/%ld) ", torrent->peers[j]->ip, torrent->peers[j]->port,
-                    get_peer_num_completed_blocks (torrent->peers[j]), torrent->num_blocks);
+                    get_peer_num_downloaded_blocks (torrent->peers[j]), torrent->num_blocks);
             }
             printf ("\n");
         }
@@ -233,7 +233,7 @@ void print_torrent_status (torrent_t *torrent)
     printf ("STATUS: ");
     if (is_torrent_info_set (torrent) == 0)
         RED_PRTF ("NO INFO\n")
-    else if (get_num_completed_blocks (torrent) == torrent->num_blocks)
+    else if (get_num_downloaded_blocks (torrent) == torrent->num_blocks)
         GREEN_PRTF ("COMPLETED\n")
     else
         YELLOW_PRTF ("DOWNLOADING\n")
@@ -245,7 +245,7 @@ void print_torrent_status (torrent_t *torrent)
         else
             printf ("%ld B", torrent->file_size);
     printf (", BLOCKS: %ld/%ld, NUM PEERS: %ld, SPEED: %.2f KiB/s\n",
-        get_num_completed_blocks(torrent), torrent->num_blocks, torrent->num_peers, 
+        get_num_downloaded_blocks(torrent), torrent->num_blocks, torrent->num_peers, 
             (double)get_torrent_download_speed(torrent)/1024.0);
     if (is_torrent_info_set (torrent) == 1)
     {

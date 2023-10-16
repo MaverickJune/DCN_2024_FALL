@@ -183,9 +183,9 @@ ssize_t find_torrent_name (torrent_engine_t *engine, char* name);
 // Returns the status if successful, B_ERROR if error.
 B_STAT get_block_status (torrent_t *torrent, size_t block_index);
 
-// Get the number of completed blocks.
-// Returns the number of completed blocks if successful, -1 if error.
-ssize_t get_num_completed_blocks (torrent_t *torrent);
+// Get the number of downloaded blocks.
+// Returns the number of downloaded blocks if successful, -1 if error.
+ssize_t get_num_downloaded_blocks (torrent_t *torrent);
 
 // Get the index of a random missing block that the given peer has.
 // Returns the block index if successful, -1 if no such block exists, -2 if error.
@@ -195,9 +195,9 @@ ssize_t get_rand_missing_block_that_peer_has (torrent_t *torrent, peer_data_t *p
 // Returns the status if successful, B_ERROR if error.
 B_STAT get_peer_block_status (peer_data_t *peer, size_t block_index);
 
-// Get the number of completed blocks from a peer.
-// Returns the number of completed blocks if successful, -1 if error.
-ssize_t get_peer_num_completed_blocks (peer_data_t *peer);
+// Get the number of downloaded blocks from a peer.
+// Returns the number of downloaded blocks if successful, -1 if error.
+ssize_t get_peer_num_downloaded_blocks (peer_data_t *peer);
 
 // Find pointer to the torrent block data indicated by the block index.
 // Returns the pointer if successful, NULL if error.

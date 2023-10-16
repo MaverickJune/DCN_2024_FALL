@@ -1274,7 +1274,7 @@ int handle_request_torrent_block_ans (torrent_engine_t *engine, int peer_sock,
     // Push block.
     if (is_torrent_info_set (torrent) == 0 || get_block_status (torrent, block_index) != B_DOWNLOADED)
     {
-        // ERROR_PRTF ("ERROR handle_request_torrent_block_ans(): block %ld is not completed.\n", block_index);
+        // ERROR_PRTF ("ERROR handle_request_torrent_block_ans(): block %ld is not downloaded.\n", block_index);
         return -1;
     }
     if (push_torrent_block_ans (peer, torrent, block_index) < -1)

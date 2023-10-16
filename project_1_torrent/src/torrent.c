@@ -553,22 +553,22 @@ B_STAT get_block_status (torrent_t *torrent, size_t block_index)
     return torrent->block_status[block_index];
 }
 
-ssize_t get_num_completed_blocks (torrent_t *torrent)
+ssize_t get_num_downloaded_blocks (torrent_t *torrent)
 {
     if (torrent == NULL)
     {
-        ERROR_PRTF ("ERROR get_num_completed_blocks(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR get_num_downloaded_blocks(): invalid arguments.\n");
         return -1;
     }
     if (is_torrent_info_set (torrent) != 1)
         return 0;
-    size_t num_completed_blocks = 0;
+    size_t num_downloaded_blocks = 0;
     for (size_t i = 0; i < torrent->num_blocks; i++)
     {
         if (get_block_status (torrent, i) == B_DOWNLOADED)
-            num_completed_blocks++;
+            num_downloaded_blocks++;
     }
-    return num_completed_blocks;
+    return num_downloaded_blocks;
 }
 
 ssize_t get_rand_missing_block_that_peer_has (torrent_t *torrent, peer_data_t *peer)
@@ -614,22 +614,22 @@ B_STAT get_peer_block_status (peer_data_t *peer, size_t block_index)
     return peer->block_status[block_index];
 }
 
-ssize_t get_peer_num_completed_blocks (peer_data_t *peer)
+ssize_t get_peer_num_downloaded_blocks (peer_data_t *peer)
 {
     if (peer == NULL)
     {
-        ERROR_PRTF ("ERROR get_peer_num_completed_blocks(): invalid arguments.\n");
+        ERROR_PRTF ("ERROR get_peer_num_downloaded_blocks(): invalid arguments.\n");
         return -1;
     }
     if (peer->block_status == NULL)
         return 0;
-    size_t num_completed_blocks = 0;
+    size_t num_downloaded_blocks = 0;
     for (size_t i = 0; i < peer->torrent->num_blocks; i++)
     {
         if (peer->block_status[i] == B_DOWNLOADED)
-            num_completed_blocks++;
+            num_downloaded_blocks++;
     }
-    return num_completed_blocks;
+    return num_downloaded_blocks;
 }
 
 void *get_block_ptr (torrent_t *torrent, size_t block_index)
@@ -658,10 +658,10 @@ ssize_t get_torrent_download_speed (torrent_t *torrent)
         return 0;
     if (get_elapsed_msec () - torrent->download_speed_prev_msec > TORRENT_SPEED_MEASURE_INTERVAL_MSEC)
     {
-        torrent->download_speed = ((get_num_completed_blocks(torrent) - torrent->download_speed_prev_num_blocks) 
+        torrent->download_speed = ((get_num_downloaded_blocks(torrent) - torrent->download_speed_prev_num_blocks) 
             * 1000 * BLOCK_SIZE) / TORRENT_SPEED_MEASURE_INTERVAL_MSEC;
         torrent->download_speed_prev_msec = get_elapsed_msec ();
-        torrent->download_speed_prev_num_blocks = get_num_completed_blocks(torrent);
+        torrent->download_speed_prev_num_blocks = get_num_downloaded_blocks(torrent);
     }
     return torrent->download_speed;
 }
