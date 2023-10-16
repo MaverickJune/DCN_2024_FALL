@@ -310,7 +310,7 @@ torrent_t *init_torrent_from_file (torrent_engine_t *engine, char *torrent_name,
     for (size_t i = 0; i < torrent->num_blocks; i++)
     {
         torrent->block_hashes[i] = get_hash (get_block_ptr (torrent, i), BLOCK_SIZE);
-        torrent->block_status[i] = B_READY;
+        torrent->block_status[i] = B_DOWNLOADED;
     }
     torrent->torrent_hash = get_hash (torrent->data, torrent->file_size);
     return torrent;
@@ -565,7 +565,7 @@ ssize_t get_num_completed_blocks (torrent_t *torrent)
     size_t num_completed_blocks = 0;
     for (size_t i = 0; i < torrent->num_blocks; i++)
     {
-        if (get_block_status (torrent, i) == B_READY)
+        if (get_block_status (torrent, i) == B_DOWNLOADED)
             num_completed_blocks++;
     }
     return num_completed_blocks;
@@ -587,7 +587,7 @@ ssize_t get_rand_missing_block_that_peer_has (torrent_t *torrent, peer_data_t *p
     ssize_t block_idx = rand() % torrent->num_blocks;
     ssize_t block_idx_start = block_idx;
     while (!(get_block_status (torrent, block_idx) == B_MISSING 
-        && get_peer_block_status (peer, block_idx) == B_READY))
+        && get_peer_block_status (peer, block_idx) == B_DOWNLOADED))
     {
         block_idx++;
         if (block_idx == torrent->num_blocks)
@@ -626,7 +626,7 @@ ssize_t get_peer_num_completed_blocks (peer_data_t *peer)
     size_t num_completed_blocks = 0;
     for (size_t i = 0; i < peer->torrent->num_blocks; i++)
     {
-        if (peer->block_status[i] == B_READY)
+        if (peer->block_status[i] == B_DOWNLOADED)
             num_completed_blocks++;
     }
     return num_completed_blocks;

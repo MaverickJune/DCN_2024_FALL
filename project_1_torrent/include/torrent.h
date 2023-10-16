@@ -58,7 +58,7 @@ typedef enum B_STAT
     B_ERROR = -1,
     B_MISSING = 0,
     B_REQUESTED = 1,
-    B_READY = 2
+    B_DOWNLOADED = 2
 } B_STAT;
 
 // Struct for managing individual peers.

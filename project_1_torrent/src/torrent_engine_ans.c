@@ -1105,7 +1105,7 @@ int push_torrent_block_ans (peer_data_t *peer, torrent_t *torrent, size_t block_
         ERROR_PRTF ("ERROR push_torrent_block_ans(): invalid block index.\n");
         return -2;
     }
-    if (get_block_status (torrent, block_index) != B_READY)
+    if (get_block_status (torrent, block_index) != B_DOWNLOADED)
     {
         ERROR_PRTF ("ERROR push_torrent_block_ans(): block not available.\n");
         return -2;
@@ -1272,7 +1272,7 @@ int handle_request_torrent_block_ans (torrent_engine_t *engine, int peer_sock,
     INFO_PRTF ("RECEIVED 0x%08x BLOCK %ld REQUEST FROM %s:%d.\n", torrent->torrent_hash, block_index, peer->ip, peer->port);
     
     // Push block.
-    if (is_torrent_info_set (torrent) == 0 || get_block_status (torrent, block_index) != B_READY)
+    if (is_torrent_info_set (torrent) == 0 || get_block_status (torrent, block_index) != B_DOWNLOADED)
     {
         // ERROR_PRTF ("ERROR handle_request_torrent_block_ans(): block %ld is not completed.\n", block_index);
         return -1;
@@ -1543,7 +1543,7 @@ int handle_push_torrent_block_ans (torrent_engine_t *engine, int peer_sock,
         || get_block_status (torrent, block_index) == B_REQUESTED)
     {
         memcpy (get_block_ptr (torrent, block_index), buffer, BLOCK_SIZE);
-        torrent->block_status[block_index] = B_READY;
+        torrent->block_status[block_index] = B_DOWNLOADED;
     }
 
     free (buffer);
