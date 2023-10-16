@@ -30,7 +30,8 @@ http_t *parse_http_header_ans (char *header_str)
     if (line == NULL)
     {
         ERROR_PRTF ("ERROR parse_http_header(): \\r\\n not found.\n");
-        goto ERROR;
+        free_http(http);
+        return NULL;
     }
     char *token = strtok (line, " ");
     while (token != NULL)
@@ -41,7 +42,8 @@ http_t *parse_http_header_ans (char *header_str)
             if (http->method == NULL)
             {
                 ERROR_PRTF ("ERROR parse_http_header(): method copy\n");
-                goto ERROR;
+                free_http(http);
+                return NULL;
             }
         }
         else if (http->path == NULL)
@@ -57,7 +59,8 @@ http_t *parse_http_header_ans (char *header_str)
             if (http->path == NULL)
             {
                 ERROR_PRTF ("ERROR parse_http_header(): path copy\n");
-                goto ERROR;
+                free_http(http);
+                return NULL;
             }
         }
         else if (http->version == NULL)
@@ -66,13 +69,15 @@ http_t *parse_http_header_ans (char *header_str)
             if (http->version == NULL)
             {
                 ERROR_PRTF ("ERROR parse_http_header(): version copy\n");
-                goto ERROR;
+                free_http(http);
+                return NULL;
             }
         }
         else
         {
             ERROR_PRTF ("ERROR parse_http_header(): first-line token - token: %s\n", token);
-            goto ERROR;
+            free_http(http);
+            return NULL;
         }
         token = strtok (NULL, " ");
     }
@@ -80,7 +85,8 @@ http_t *parse_http_header_ans (char *header_str)
     {
         ERROR_PRTF ("ERROR parse_http_header(): first-line - method: %s, path: %s, version: %s\n",
                 http->method? http->method : "NULL", http->path? http->path : "NULL", http->version? http->version : "NULL");
-        goto ERROR;
+        free_http(http);
+        return NULL;
     }
 
     line = strtok(next_line, "\r\n");
@@ -93,7 +99,8 @@ http_t *parse_http_header_ans (char *header_str)
             if (token == NULL)
             {
                 ERROR_PRTF ("ERROR parse_http_header(): field token - token: %s\n", token? token : "NULL");
-                goto ERROR;
+                free_http(http);
+                return NULL;
             }
             char *field = token;
             char *val = strtok (NULL, "\r\n");
@@ -102,7 +109,8 @@ http_t *parse_http_header_ans (char *header_str)
             if (add_field_to_http (http, field, val) == -1)
             {
                 ERROR_PRTF ("ERROR parse_http_header(): add_field_to_http()\n");
-                goto ERROR;
+                free_http(http);
+                return NULL;
             }
             line = strtok(next_line, "\r\n");
             if (line == NULL)
@@ -111,9 +119,6 @@ http_t *parse_http_header_ans (char *header_str)
         }
     }
     return http;
-    ERROR:
-    free_http(http);
-    return NULL;
 }
 
 http_t *parse_multipart_content_body_ans (char** body_p, char* boundary, size_t body_size)
@@ -174,7 +179,8 @@ http_t *parse_multipart_content_body_ans (char** body_p, char* boundary, size_t 
         if (token == NULL)
         {
             ERROR_PRTF ("ERROR parse_multipart_content_body(): field token - token: %s\n", token? token : "NULL");
-            goto ERROR;
+            free_http(http);
+            return NULL;  
         }
         char *field = token;
         char *val = strtok (NULL, "\r\n");
@@ -183,7 +189,8 @@ http_t *parse_multipart_content_body_ans (char** body_p, char* boundary, size_t 
         if (add_field_to_http (http, field, val) == -1)
         {
             ERROR_PRTF ("ERROR parse_multipart_content_body(): add_field_to_http()\n");
-            goto ERROR;
+            free_http(http);
+            return NULL;  
         }
         line = strtok(next_line, "\r\n");
         if (line == NULL)
@@ -202,14 +209,12 @@ http_t *parse_multipart_content_body_ans (char** body_p, char* boundary, size_t 
     if (add_body_to_http (http, data_size, eoh_ptr) == -1)
     {
         ERROR_PRTF ("ERROR parse_multipart_content_body(): add_body_to_http()\n");
-        goto ERROR;
+        free_http(http);
+        return NULL;    
     }
 
     *body_p = head_ptr;
     return http;
-    ERROR:
-    free_http(http);
-    return NULL;
 }
 
 
@@ -298,7 +303,9 @@ int server_routine_ans (int client_sock)
         if (request == NULL)
         {
             ERROR_PRTF ("SERVER ERROR: Failed to parse HTTP header\n");
-            goto EXIT;
+            free_http (request);
+            free_http (response);
+            return -1;
         }
         printf ("\tHTTP ");
         GREEN_PRTF ("REQUEST:\n");
@@ -363,7 +370,9 @@ int server_routine_ans (int client_sock)
                     if (response == NULL)
                     {
                         ERROR_PRTF ("SERVER ERROR: Failed to create HTTP response\n");
-                        goto EXIT;
+                        free_http (request);
+                        free_http (response);
+                        return -1;
                     }
                     add_body_to_http (response, sizeof(body), body);
                     add_field_to_http (response, "Content-Type", "text/html");
@@ -378,7 +387,9 @@ int server_routine_ans (int client_sock)
                     {
                         ERROR_PRTF ("SERVER ERROR: Failed to create HTTP response\n");
                         free (file_buffer);
-                        goto EXIT;
+                        free_http (request);
+                        free_http (response);
+                        return -1;
                     }
                     add_body_to_http (response, file_size, file_buffer);
                     add_field_to_http (response, "Connection", "close");
@@ -406,7 +417,9 @@ int server_routine_ans (int client_sock)
                 if (response == NULL)
                 {
                     ERROR_PRTF ("SERVER ERROR: Failed to create HTTP response\n");
-                    goto EXIT;
+                    free_http (request);
+                    free_http (response);
+                    return -1;
                 }
                 add_body_to_http (response, sizeof(body), body);
                 add_field_to_http (response, "Content-Type", "text/html");
@@ -426,7 +439,9 @@ int server_routine_ans (int client_sock)
             if (request_body == NULL)
             {
                 ERROR_PRTF ("SERVER ERROR: Failed to allocate memory for request_body\n");
-                goto EXIT;
+                free_http (request);
+                free_http (response);
+                return -1;
             }
             // Read the request_body of the client http message.
             size_t body_in_header_len = bytes_received - (eoh_ptr - header_buffer);
@@ -446,7 +461,9 @@ int server_routine_ans (int client_sock)
                 {
                     ERROR_PRTF ("SERVER ERROR: Failed to parse multipart content request body\n");
                     free (request_body);
-                    goto EXIT;
+                    free_http (request);
+                    free_http (response);
+                    return -1;
                 }
                 printf ("\tHTTP ");
                 GREEN_PRTF ("POST BODY:\n");
@@ -459,7 +476,9 @@ int server_routine_ans (int client_sock)
                     ERROR_PRTF ("SERVER ERROR: Failed to get filename\n");
                     free (request_body);
                     free_http (body_part);
-                    goto EXIT;
+                    free_http (request);
+                    free_http (response);
+                    return -1;
                 }
                 filename += 10;
                 strchr (filename, '"')[0] = '\0';
@@ -471,7 +490,9 @@ int server_routine_ans (int client_sock)
                     ERROR_PRTF ("SERVER ERROR: Invalid file type\n");
                     free (request_body);
                     free_http (body_part);
-                    goto EXIT;
+                    free_http (request);
+                    free_http (response);
+                    return -1;
                 }
 
                 // Add the file to the album.
@@ -483,7 +504,9 @@ int server_routine_ans (int client_sock)
                     ERROR_PRTF ("SERVER ERROR: Failed to write file\n");
                     free (request_body);
                     free_http (body_part);
-                    goto EXIT;
+                    free_http (request);
+                    free_http (response);
+                    return -1;
                 }
 
                 // Append the appropriate html for the new image to album.html.
@@ -493,7 +516,9 @@ int server_routine_ans (int client_sock)
                 {
                     ERROR_PRTF ("SERVER ERROR: Failed to allocate memory for html\n");
                     free (request_body);
-                    goto EXIT;
+                    free_http (request);
+                    free_http (response);
+                    return -1;
                 }
                 sprintf (html, ALBUM_HTML_TEMPLATE, filename, filename);
                 append_file (ALBUM_HTML_PATH , html, strlen (html));
@@ -508,7 +533,9 @@ int server_routine_ans (int client_sock)
             if (response == NULL)
             {
                 ERROR_PRTF ("SERVER ERROR: Failed to create HTTP response\n");
-                goto EXIT;
+                free_http (request);
+                free_http (response);
+                return -1;
             }
             add_body_to_http (response, sizeof(body), body);
             add_field_to_http (response, "Content-Type", "text/html");
@@ -522,7 +549,9 @@ int server_routine_ans (int client_sock)
             if (response == NULL)
             {
                 ERROR_PRTF ("SERVER ERROR: Failed to create HTTP response\n");
-                goto EXIT;
+                free_http (request);
+                free_http (response);
+                return -1;
             }
             add_body_to_http (response, sizeof(body), body);
             add_field_to_http (response, "Content-Type", "text/html");
@@ -543,7 +572,9 @@ int server_routine_ans (int client_sock)
         if (response_size == -1)
         {
             ERROR_PRTF ("SERVER ERROR: Failed to write HTTP response to buffer\n");
-            goto EXIT;
+            free_http (request);
+            free_http (response);
+            return -1;
         }
 
         // Send http response to client
@@ -551,7 +582,9 @@ int server_routine_ans (int client_sock)
         {
             ERROR_PRTF ("SERVER ERROR: Failed to send response to client\n");
             free (response_buffer);
-            goto EXIT;
+            free_http (request);
+            free_http (response);
+            return -1;
         }
 
         free (response_buffer);
@@ -559,10 +592,6 @@ int server_routine_ans (int client_sock)
     free_http (request);
     free_http (response);
     return 0;
-    EXIT:
-    free_http (request);
-    free_http (response);
-    return -1;
 }
 
 

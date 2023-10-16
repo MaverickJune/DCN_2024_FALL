@@ -55,7 +55,8 @@ http_t *init_http_with_arg (char *method, char *path, char *version, char *statu
         if (response->method == NULL)
         {
             ERROR_PRTF ("ERROR init_http_response(): method copy\n");
-            goto ERROR;
+            free_http(response);
+            return NULL;
         }
     }
     if (path)
@@ -64,7 +65,8 @@ http_t *init_http_with_arg (char *method, char *path, char *version, char *statu
         if (response->path == NULL)
         {
             ERROR_PRTF ("ERROR init_http_response(): path copy\n");
-            goto ERROR;
+            free_http(response);
+            return NULL;
         }
     }
     if (version)
@@ -73,7 +75,8 @@ http_t *init_http_with_arg (char *method, char *path, char *version, char *statu
         if (response->version == NULL)
         {
             ERROR_PRTF ("ERROR init_http_response(): version copy\n");
-            goto ERROR;
+            free_http(response);
+            return NULL;
         }
     }
     if (status)
@@ -82,14 +85,12 @@ http_t *init_http_with_arg (char *method, char *path, char *version, char *statu
         if (response->status == NULL)
         {
             ERROR_PRTF ("ERROR init_http_response(): status copy\n");
-            goto ERROR;
+            free_http(response);
+            return NULL;
         }
     }
 
     return response;
-    ERROR:
-    free_http(response);
-    return NULL;
 }
 
 http_t *copy_http (http_t *http)
@@ -110,7 +111,8 @@ http_t *copy_http (http_t *http)
     if (add_body_to_http (copy, http->body_size, http->body_data) == -1)
     {
         ERROR_PRTF ("ERROR copy_http(): add_body_to_http()\n");
-        goto ERROR;
+        free_http(copy);
+        return NULL;
     }
 
     for (int i = 0; i < http->field_count; i++)
@@ -118,14 +120,12 @@ http_t *copy_http (http_t *http)
         if (add_field_to_http (copy, http->fields[i].field, http->fields[i].val) == -1)
         {
             ERROR_PRTF ("ERROR copy_http(): add_field_to_http()\n");
-            goto ERROR;
+            free_http(copy);
+            return NULL;
         }
     }
 
     return copy;
-    ERROR:
-    free_http(copy);
-    return NULL;
 }
 
 void free_http (http_t *http)
