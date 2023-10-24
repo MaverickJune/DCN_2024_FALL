@@ -308,6 +308,7 @@ int torrent_server (torrent_engine_t *engine)
 
 // TODO: Open a socket and listen for incoming connections. 
 //       Returns the socket file descriptor on success, -1 on error.
+// HINT: Use fcntl() to set the socket as non-blocking. 
 int listen_socket (int port)
 {
     return 0;
@@ -315,7 +316,7 @@ int listen_socket (int port)
 
 // TODO: Accept an incoming connection with a timeout. 
 //       Return the connected socket file descriptor on success, -2 on error, -1 on timeout.
-//       MUST use a non-blocking socket with a timeout of TIMEOUT_MSEC msec.
+//       MUST use a non-blocking listen socket with a timeout of TIMEOUT_MSEC msec.
 // HINT: Use poll() for timeout. kbhit() in torrent_util.c for an example on using poll().
 int accept_socket(int listen_sock, struct sockaddr_in *cli_addr, socklen_t *clilen)
 {
@@ -324,7 +325,7 @@ int accept_socket(int listen_sock, struct sockaddr_in *cli_addr, socklen_t *clil
 
 // TODO: Connect to a server with a timeout. 
 //       Return the socket file descriptor on success, -2 on error, -1 on timeout.
-//       MUST use a non-blocking socket with a timeout of TIMEOUT_MSEC msec.
+//       MUST have a timeout of TIMEOUT_MSEC msec.
 // HINT: Use fcntl() to set the socket as non-blocking. 
 //       Use poll() for timeout. See kbhit() in torrent_utils.c for an example on using poll().
 int connect_socket(char *server_ip, int port)

@@ -676,6 +676,13 @@ int listen_socket_ans (int port)
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(port);
+    int ret = fcntl(sockfd, F_SETFL, O_NONBLOCK);
+    if (ret < 0) 
+    {
+        ERROR_PRTF ("ERROR listen_socket_ans(): fcntl() failed. (ERRNO %d:%s)\n", errno, strerror(errno));
+        close (sockfd);
+        return -1;
+    }
 
     int tr = 1;
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &tr, sizeof(int)) == -1)
