@@ -205,6 +205,11 @@ http_t *parse_multipart_content_body_ans (char** body_p, char* boundary, size_t 
             break;
         head_ptr++;
     }
+    if (strncmp (head_ptr + strlen(boundary), "--", 2) == 0)
+        head_ptr -= 4; // \r\n--
+    else
+        head_ptr -= 2; // \r\n
+
     size_t data_size = head_ptr - eoh_ptr;
     if (add_body_to_http (http, data_size, eoh_ptr) == -1)
     {

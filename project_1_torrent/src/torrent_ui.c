@@ -194,7 +194,7 @@ void print_engine_status (torrent_engine_t *engine)
     {
         YELLOW_PRTF ("\tTORRENT %ld:\n", i);
         torrent_t *torrent = engine->torrents[i];
-        printf ("\t\tNAME: %s, ", torrent->torrent_name? torrent->torrent_name : "NULL");
+        printf ("\t\tNAME: %s, ", torrent->torrent_name);
         printf ("STATUS: ");
         if (is_torrent_info_set (torrent) == 0)
             RED_PRTF ("NO INFO\n")
@@ -229,7 +229,7 @@ void print_torrent_status (torrent_t *torrent)
 {
     if (torrent == NULL)
         return;
-    printf ("\tNAME: %s, ", torrent->torrent_name? torrent->torrent_name : "NULL");
+    printf ("\tNAME: %s, ", torrent->torrent_name);
     printf ("STATUS: ");
     if (is_torrent_info_set (torrent) == 0)
         RED_PRTF ("NO INFO\n")
