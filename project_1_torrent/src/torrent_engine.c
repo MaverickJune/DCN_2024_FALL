@@ -318,6 +318,7 @@ int listen_socket (int port)
 //       Return the connected socket file descriptor on success, -2 on error, -1 on timeout.
 //       MUST use a non-blocking listen socket with a timeout of TIMEOUT_MSEC msec.
 // HINT: Use poll() for timeout. kbhit() in torrent_util.c for an example on using poll().
+//       Do NOT set the accepted socket as non-blocking. This will cause problems with read_bytes().
 int accept_socket(int listen_sock, struct sockaddr_in *cli_addr, socklen_t *clilen)
 {
     return 0;
