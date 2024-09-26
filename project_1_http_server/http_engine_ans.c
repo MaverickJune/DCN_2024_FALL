@@ -6,6 +6,7 @@
 #include "sys/socket.h"
 #include "arpa/inet.h"
 #include "netinet/tcp.h"
+#include <pthread.h>
 
 #define MAX_WAITING_CONNECTIONS 10 // Maximum number of waiting connections
 #define MAX_PATH_SIZE 256 // Maximum size of path
@@ -13,6 +14,13 @@
 #define ALBUM_PATH "/public/album"
 #define ALBUM_HTML_PATH "./server_root/public/album/album_images.html"
 #define ALBUM_HTML_TEMPLATE "<div class=\"card\"> <img src=\"/public/album/%s\" alt=\"Unable to load %s\"> </div>\n"
+
+int server_routine_ans (int server_port);
+
+//Function that calls respond, to be used as parameter of pthread_create()
+void* t_function(void* arg){
+	server_routine_ans(*(int *)arg);
+}
 
 
 http_t *parse_http_header_ans (char *header_str)
@@ -406,6 +414,8 @@ int server_routine_ans (int client_sock)
                         add_field_to_http (response, "Content-Type", "image/png");
                     else if (strncmp (get_file_extension (file_path), "jpg", 3) == 0)
                         add_field_to_http (response, "Content-Type", "image/jpeg");
+                    else if (strncmp (get_file_extension (file_path), "mp4", 3) == 0)
+                        add_field_to_http (response, "Content-Type", "video/mp4");
                     else
                         add_field_to_http (response, "Content-Type", "application/octet-stream");
                 }
@@ -593,6 +603,7 @@ int server_routine_ans (int client_sock)
     }
     free_http (request);
     free_http (response);
+    close(client_sock);
     return 0;
 }
 
@@ -602,6 +613,9 @@ int server_engine_ans (int server_port)
     // Initialize server socket
     int server_listening_sock = socket(PF_INET, SOCK_STREAM, 0);
     int val = 1;
+    int client_fd[50];
+    int client_count = 0;
+    pthread_t p_thread;
     setsockopt(server_listening_sock, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val));
     if (server_listening_sock == -1)
     {
@@ -638,8 +652,8 @@ int server_engine_ans (int server_port)
         int client_connected_sock;
 
         // Accept incoming connections
-        client_connected_sock = accept(server_listening_sock, (struct sockaddr *)&client_addr_info, &client_addr_info_len);
-        if (client_connected_sock == -1)
+        client_fd[client_count] = accept(server_listening_sock, (struct sockaddr *)&client_addr_info, &client_addr_info_len);
+        if (client_fd[client_count] == -1)
         {
             ERROR_PRTF ("SERVER ERROR: Failed to accept an incoming connection (ERRNO %d:%s)\n", errno, strerror(errno));
             continue;
@@ -648,11 +662,15 @@ int server_engine_ans (int server_port)
         printf("%s:%d ", inet_ntoa(client_addr_info.sin_addr), ntohs(client_addr_info.sin_port));
         GREEN_PRTF ("CONNECTED.\n");
 
-        // Serve the client
-        server_routine_ans (client_connected_sock);
+        // Serve the client in a separate thread
+        if(pthread_create(&p_thread, NULL, t_function, &client_fd[client_count])){
+                printf("Could not make thread");
+            }
+
+        client_count++;
+        if (client_count >= 50)
+            client_count = 0;
         
-        // Close the connection with the client
-        close(client_connected_sock);
         printf ("CLIENT ");
         printf ("%s:%d ", inet_ntoa(client_addr_info.sin_addr), ntohs(client_addr_info.sin_port));
         GREEN_PRTF ("DISCONNECTED.\n\n");

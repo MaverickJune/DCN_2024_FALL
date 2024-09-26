@@ -15,7 +15,7 @@ VPATH=.
 DEPS = $(wildcard *.h)
 
 OPTS=-O3
-LDFLAGS=
+LDFLAGS= -lpthread
 COMMON= 
 CFLAGS= -Wall -Wno-unused-variable
 
