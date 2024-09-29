@@ -1,6 +1,4 @@
 // NXC Data Communications Network http_engine.c for HTTP server
-// Written by Jongseok Park (cakeng@snu.ac.kr)
-// 2023. 9. 11
 
 #include "http_functions.h"
 #include "sys/socket.h"

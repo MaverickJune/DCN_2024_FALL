@@ -1,6 +1,4 @@
 // NXC Data Communications Network http_functions.h for HTTP server
-// Written by Jongseok Park (cakeng@snu.ac.kr)
-// 2023. 9. 11
 
 
 ///// DO NOT MODIFY THIS FILE!! ////
