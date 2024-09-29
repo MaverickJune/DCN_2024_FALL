@@ -1,6 +1,4 @@
 // NXC Data Communications Network socket_util.h
-// Written by Jongseok Park (cakeng@snu.ac.kr)
-// 2023. 9. 7
 
 #ifndef SOCKET_UTIL_H
 #define SOCKET_UTIL_H

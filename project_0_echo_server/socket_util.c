@@ -1,6 +1,5 @@
 // NXC Data Communications Network socket_util.c
-// Written by Jongseok Park (cakeng@snu.ac.kr)
-// 2023. 9. 7
+
 
 #include "socket_util.h"
 

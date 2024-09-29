@@ -4,6 +4,7 @@
 #include "sys/socket.h"
 #include "arpa/inet.h"
 #include "netinet/tcp.h"
+#include <pthread.h>
 
 #define MAX_WAITING_CONNECTIONS 10 // Maximum number of waiting connections
 #define MAX_PATH_SIZE 256 // Maximum size of path
@@ -48,10 +49,13 @@ int server_engine (int server_port)
         // TODO: Accept incoming connections
 
         // Serve the client
-        server_routine (client_connected_sock);
+        // If a client is holding the server routine for a long time, the server cannot handle another request.
+        // Find a way to deal with multiple outstanding requests from clients (HINT: use the pthread library).
+        // But first, make sure that your single server routine call works properly to at least get partial credit!
+
+        server_routine (client_connected_sock); // MODIFY THIS FUNCTION CALL!!
         
         // TODO: Close the connection with the client
-
     }
 
     // TODO: Close the server socket

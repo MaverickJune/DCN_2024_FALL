@@ -18,6 +18,7 @@ int server_routine_ans (int server_port);
 //Function that calls respond, to be used as parameter of pthread_create()
 void* t_function(void* arg){
 	server_routine_ans(*(int *)arg);
+    pthread_exit("NULL");
 }
 
 

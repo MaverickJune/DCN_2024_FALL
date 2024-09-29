@@ -1,6 +1,4 @@
 // NXC Data Communications Network echo.c
-// Written by Jongseok Park (cakeng@snu.ac.kr)
-// 2023. 9. 7
 
 #include "stdio.h"
 #include "stdlib.h"
