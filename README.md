@@ -1,11 +1,12 @@
 # DCN 2024 Fall Socket Programming Project
-Socket programming project created for SNU ECE 2024 Fall **Introduction to Data Communication Networks** 
+Programming project created for SNU ECE 2024 Fall **Introduction to Data Communication Networks** 
 
 Includes three socket applications:
 
 1. Echo server (Tutorial Project)
 2. HTTP server (Includes GET, POST, HTTP Authentication)
 Please refer to the included "[Project 1] Socket Programming.pdf" for project details for the HTTP server and the torrent application.
+3. WebRTC : On dev ...
 
 Below are some descriptions on the 2. HTTP server. A more detailed descriptions are available in the project PDF.
 
@@ -63,5 +64,10 @@ An example of using the http_t struct and its functions to create an HTTP respon
 5. Returning the HTTP response\
 When your HTTP response is ready, you must send the response back to your client. The response message must be formatted according to the HTTP protocol standards, following a similar structure to an HTTP request message, but with a status line instead of a request line.
 Fortunately, we have implemented the formatting and sending of the HTTP response for you. It will automatically format an http_t struct into a correct HTTP response message and send it back to your web browser. Checking out the write_http_to_buffer () function may help you better understand the formatting of an HTTP response message and may also help you implement the parse_http_header () function.
+
+6. Dealing with multiple outstanding requests\
+In the current skeleton implementation, when a request takes a long time to handle, the server cannot process additional requests.
+Think about why this happens, and modify the skeleton code in the relevant part to handle multiple outstanding requests.
+The easiest way to verify the correctness of your implementation is by creating another internet tab and connecting to the server while playing the video in the "NXC web album" on the webpage.
 
 ---
