@@ -27,7 +27,7 @@ chmod +x ./http_server
 ```
 ./http_server_<YOUR_SYSTEM> 62123
 ```
-3. Connect to the server by entering http://127.0.0.1:62123/ as the URL on your favorite web browser. You should be greeted with the following web page.
+3. Connect to the server by entering http://127.0.0.1:62123/ as the URL on your favorite web browser. You should be greeted with the following web page(legacy version from 2023 Fall Project).
 ![HTTP_home.png](./HTTP_home.png)
 
 ## HTTP Server Program Behavior
