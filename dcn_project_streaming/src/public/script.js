@@ -1,12 +1,11 @@
-const signalingSocket = io('http://localhost:9000'); 
-// const signalingSocket = io('http://147.46.128.52:62124')
+// const signalingSocket = io('http://localhost:9000'); 
+const signalingSocket = io('http://147.46.128.52:62125')
 const localVideo_1 = document.getElementById('localVideo_1');
 const remoteVideo = document.getElementById('remoteVideo');
 const connectButton = document.getElementById('connectButton');
 const generateButton = document.getElementById('generateButton');
 const playButton_1 = document.getElementById('playButton_1');
 const labelDisplay = document.getElementById('label');
-const capturedImage = document.getElementById('capturedImage');
 
 // for tracking the rxvolume
 const rxBytes = document.getElementById('rxBytes');
@@ -39,33 +38,6 @@ async function startLocalStream_1() {
     // Handle the video `ended` event to reset the stream if needed
     localVideo_1.addEventListener('ended', () => {
       console.log('Video ended. Waiting for seeking to reactivate stream.');
-    });
-
-    // Handle the `seeked` event to reactivate the stream if user seeks back
-    localVideo_1.addEventListener('seeked', async () => {
-      if (localVideo_1.currentTime < localVideo_1.duration) {
-        try {
-          // If the video is not playing, play it
-          if (localVideo_1.paused) {
-            await localVideo_1.play();
-          }
-          // Reactivate the stream if it became inactive
-          if (localStream_1 && localStream_1.active === false) {
-            localStream_1 = localVideo_1.captureStream();
-            if (localStream_1) {
-              localStream_1.getTracks().forEach(track => {
-                console.log('Adding local stream 1 track to peer connection:', track);
-                peerConnection.addTrack(track, localStream_1);
-              });
-            } else {
-              console.log('No local stream 1 available to add tracks from.');
-            }
-            console.log('Local video 1 stream reactivated:', localStream_1);
-          }
-        } catch (error) {
-          console.error('Error reactivating local video 1.', error);
-        }
-      }
     });
   } catch (error) {
     console.error('Error accessing local video 1.', error);
@@ -202,7 +174,7 @@ setInterval(() => {
 
                 // Calculate the difference to get bytes received in the last interval
                 const bytesReceivedInInterval = currentBytesReceived - previousBytesReceived;
-                rxBytes.innerHTML = `${bytesReceivedInInterval} bytes/s`;
+                rxBytes.innerHTML = `Received ${bytesReceivedInInterval} bytes/s`;
 
                 // Save the current value for the next comparison
                 previousBytesReceived = currentBytesReceived;
@@ -238,7 +210,9 @@ async function test(imageData) {
 }
 
 // Start local streams automatically on page load
-startLocalStream_1();
+playButton_1.addEventListener('click', () => {
+  startLocalStream_1();
+});
 
 function labelprocess(outTensor){
   CIFAR10_CLASSES = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"];
