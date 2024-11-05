@@ -1,11 +1,12 @@
-// const signalingSocket = io('http://localhost:9000'); 
-const signalingSocket = io('http://147.46.128.52:62125')
+const signalingSocket = io('http://localhost:9000'); 
+// const signalingSocket = io('http://147.46.128.52:62124')
 const localVideo_1 = document.getElementById('localVideo_1');
 const remoteVideo = document.getElementById('remoteVideo');
 const connectButton = document.getElementById('connectButton');
 const generateButton = document.getElementById('generateButton');
 const playButton_1 = document.getElementById('playButton_1');
 const labelDisplay = document.getElementById('label');
+const capturedImage = document.getElementById('capturedImage');
 
 // for tracking the rxvolume
 const rxBytes = document.getElementById('rxBytes');
@@ -13,7 +14,7 @@ const rxBytes = document.getElementById('rxBytes');
 //for capturingimage and sending to DNN
 const capturingCanvas = document.createElement('canvas');
 const capturingContext = capturingCanvas.getContext('2d');
-const frameRate = 24;
+const frameRate = 30;
 const interval = 1000/frameRate;
 
 // TO DO: change this webrtc room name to something unique
@@ -32,12 +33,44 @@ async function startLocalStream_1() {
 
     // Capture the stream from video1.mp4 to send over WebRTC
     localStream_1 = localVideo_1.captureStream();
+
+    const vT = localStream_1.getVideoTracks()[0];
+    const settings = vT.getSettings();
+    console.log('Video track settings:', settings);
+
     console.log('Local video 1 stream captured:', localStream_1);
     
 
     // Handle the video `ended` event to reset the stream if needed
     localVideo_1.addEventListener('ended', () => {
       console.log('Video ended. Waiting for seeking to reactivate stream.');
+    });
+
+    // Handle the `seeked` event to reactivate the stream if user seeks back
+    localVideo_1.addEventListener('seeked', async () => {
+      if (localVideo_1.currentTime < localVideo_1.duration) {
+        try {
+          // If the video is not playing, play it
+          if (localVideo_1.paused) {
+            await localVideo_1.play();
+          }
+          // Reactivate the stream if it became inactive
+          if (localStream_1 && localStream_1.active === false) {
+            localStream_1 = localVideo_1.captureStream();
+            if (localStream_1) {
+              localStream_1.getTracks().forEach(track => {
+                console.log('Adding local stream 1 track to peer connection:', track);
+                peerConnection.addTrack(track, localStream_1);
+              });
+            } else {
+              console.log('No local stream 1 available to add tracks from.');
+            }
+            console.log('Local video 1 stream reactivated:', localStream_1);
+          }
+        } catch (error) {
+          console.error('Error reactivating local video 1.', error);
+        }
+      }
     });
   } catch (error) {
     console.error('Error accessing local video 1.', error);
@@ -131,16 +164,11 @@ connectButton.addEventListener('click', async () => {
 });
 
 generateButton.addEventListener('click', async () => {
-  // display "Hello, World!" in the label
-  // capture the image from the video stream
-  img_dat = captureFrameFromVideo();
-  //capturedImage.src = img_dat;
-
-  //TODO: inner function for executing DNN model 
-  label_output = test(img_dat);
-  // display the captured image
-  //stringify the output tensor
-  
+  //client-side generate_button
+  setInterval(()=> {
+    const imageData = captureFrameFromVideo();
+    test(imageData);
+  }, interval);
 });
 
 
@@ -174,7 +202,9 @@ setInterval(() => {
 
                 // Calculate the difference to get bytes received in the last interval
                 const bytesReceivedInInterval = currentBytesReceived - previousBytesReceived;
-                rxBytes.innerHTML = `Received ${bytesReceivedInInterval} bytes/s`;
+                
+                rxBytes.innerHTML = `${bytesReceivedInInterval} bytes/s \n ${report.framesPerSecond} fps`;
+                rxBytes.innerHTML += `${report.frameWidth} x ${report.frameHeight}`;
 
                 // Save the current value for the next comparison
                 previousBytesReceived = currentBytesReceived;
@@ -210,9 +240,7 @@ async function test(imageData) {
 }
 
 // Start local streams automatically on page load
-playButton_1.addEventListener('click', () => {
-  startLocalStream_1();
-});
+startLocalStream_1();
 
 function labelprocess(outTensor){
   CIFAR10_CLASSES = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"];
