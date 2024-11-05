@@ -7,7 +7,6 @@ const generateButton = document.getElementById('generateButton');
 const playButton_1 = document.getElementById('playButton_1');
 const labelDisplay = document.getElementById('label');
 const capturedImage = document.getElementById('capturedImage');
-const intermediateButton = document.getElementById('intermediateButton');
 
 // for tracking the rxvolume
 const rxBytes = document.getElementById('rxBytes');
@@ -15,15 +14,15 @@ const rxBytes = document.getElementById('rxBytes');
 //for capturingimage and sending to DNN
 const capturingCanvas = document.createElement('canvas');
 const capturingContext = capturingCanvas.getContext('2d');
-const frameRate = 24;
+const frameRate = 30;
 const interval = 1000/frameRate;
 
 // TO DO: change this webrtc room name to something unique
 const room = 'WebRTC314';
 
+let localStream_1;
 let peerConnection;
 let configuration;
-let dataChannel;
 
 async function startLocalStream_1() {
   try {
@@ -31,7 +30,48 @@ async function startLocalStream_1() {
     localVideo_1.src = 'video.mp4'; // Path to your local video
     await localVideo_1.play();
     console.log('Local video 1 started');
+
+    // Capture the stream from video1.mp4 to send over WebRTC
+    localStream_1 = localVideo_1.captureStream();
+
+    const vT = localStream_1.getVideoTracks()[0];
+    const settings = vT.getSettings();
+    console.log('Video track settings:', settings);
+
+    console.log('Local video 1 stream captured:', localStream_1);
     
+
+    // Handle the video `ended` event to reset the stream if needed
+    localVideo_1.addEventListener('ended', () => {
+      console.log('Video ended. Waiting for seeking to reactivate stream.');
+    });
+
+    // Handle the `seeked` event to reactivate the stream if user seeks back
+    localVideo_1.addEventListener('seeked', async () => {
+      if (localVideo_1.currentTime < localVideo_1.duration) {
+        try {
+          // If the video is not playing, play it
+          if (localVideo_1.paused) {
+            await localVideo_1.play();
+          }
+          // Reactivate the stream if it became inactive
+          if (localStream_1 && localStream_1.active === false) {
+            localStream_1 = localVideo_1.captureStream();
+            if (localStream_1) {
+              localStream_1.getTracks().forEach(track => {
+                console.log('Adding local stream 1 track to peer connection:', track);
+                peerConnection.addTrack(track, localStream_1);
+              });
+            } else {
+              console.log('No local stream 1 available to add tracks from.');
+            }
+            console.log('Local video 1 stream reactivated:', localStream_1);
+          }
+        } catch (error) {
+          console.error('Error reactivating local video 1.', error);
+        }
+      }
+    });
   } catch (error) {
     console.error('Error accessing local video 1.', error);
   }
@@ -41,18 +81,6 @@ async function startLocalStream_1() {
 function createPeerConnection() {
   console.log('Creating peer connection');
   peerConnection = new RTCPeerConnection(configuration);
-  // Create a data channel if this is the initiating peer
-  if (!dataChannel) {
-    dataChannel = peerConnection.createDataChannel('dataChannel');
-    setupDataChannel(dataChannel);
-  }
-
-  // Handle incoming data channel from remote peer
-  peerConnection.ondatachannel = (event) => {
-    console.log('Data channel received');
-    dataChannel = event.channel;
-    setupDataChannel(dataChannel);
-  };
 
   // TO DO:
   // If you received event that the ICE candidate is generated, send the ICE candidate to the peer
@@ -74,6 +102,20 @@ function createPeerConnection() {
     }
   };
 
+  // add the remote track
+  peerConnection.ontrack = (event) => {
+    remoteVideo.srcObject = event.streams[0];
+  }
+  
+  // Add local tracks to the peer connection
+  if (localStream_1) {
+    localStream_1.getTracks().forEach(track => {
+      console.log('Adding local stream 1 track to peer connection:', track);
+      peerConnection.addTrack(track, localStream_1);
+    });
+  } else {
+    console.log('No local stream 1 available to add tracks from.');
+  }
 }
 
 signalingSocket.on('connect', () => {
@@ -117,18 +159,20 @@ async function createOffer() {
   console.log('Creating offer');
 }
 
-
 connectButton.addEventListener('click', async () => {
   createOffer(); 
 });
 
 generateButton.addEventListener('click', async () => {
-  img_dat = captureFrameFromVideo();
+  //client-side generate_button
+  setInterval(()=> {
+    const imageData = captureFrameFromVideo();
+    test(imageData);
+  }, interval);
 });
 
 
 // 비디오 프레임을 캡처하는 함수
-//In the project_feature, this is processed in the server side
 function captureFrameFromVideo() {
   const canvasElement = document.createElement('canvas');
   const context = canvasElement.getContext('2d');
@@ -138,16 +182,39 @@ function captureFrameFromVideo() {
   canvasElement.height = 32;
 
   // 캔버스에 비디오 프레임 그리기
-  context.drawImage(localVideo_1, 0, 0, 32, 32);
+  context.drawImage(remoteVideo, 0, 0, 32, 32);
 
   // 캔버스에서 이미지 데이터 가져오기
   const imageData = context.getImageData(0, 0, 32, 32).data;
-  test(imageData);
+
+  // 이미지를 새 창에 표시하거나 DOM에 추가 (선택 사항)
+  return imageData;
 }
+
+// tracking the rxVolume
+let previousBytesReceived = 0;
+
+setInterval(() => {
+    peerConnection.getStats(null).then(stats => {
+        stats.forEach(report => {
+            if (report.type === 'inbound-rtp' && report.kind === 'video') {
+                const currentBytesReceived = report.bytesReceived;
+
+                // Calculate the difference to get bytes received in the last interval
+                const bytesReceivedInInterval = currentBytesReceived - previousBytesReceived;
+                
+                rxBytes.innerHTML = `${bytesReceivedInInterval} bytes/s \n ${report.framesPerSecond} fps`;
+                rxBytes.innerHTML += `${report.frameWidth} x ${report.frameHeight}`;
+
+                // Save the current value for the next comparison
+                previousBytesReceived = currentBytesReceived;
+            }
+        });
+    });
+}, 1000); // 1-second interval for monitoring
 
 //DNN inference code
 async function test(imageData) {
-  console.log("Starting DNN inference");
   const session = await ort.InferenceSession.create('./onnx_model.onnx');
   const expected_dims = [1, 3, 32, 32];
   const tensorData = new Float32Array(3 * 32 * 32);
@@ -168,27 +235,13 @@ async function test(imageData) {
   const results = await session.run(feeds);
   const outputName = session.outputNames[0]; // Get the first output name (assuming one output)
   const outputTensor = results[outputName];
-
-  //send the outputTensor to the client via datachannel
-  console.log("Sending data: ", outputTensor.data);
-  dataChannel.send(outputTensor.data);
+  console.log(outputTensor.data);
+  labelprocess(outputTensor.data);
 }
 
-function setupDataChannel(channel) {
-  channel.onopen = () => {
-      console.log('Data channel opened');
-  };
+// Start local streams automatically on page load
+startLocalStream_1();
 
-  channel.onmessage = (event) => {
-      const outTensor = event.data;
-      const outArray = new Float32Array(outTensor);
-      console.log('Received message:', outArray);
-      labelprocess(outArray);
-  };
-}
-
-
-// label processing
 function labelprocess(outTensor){
   CIFAR10_CLASSES = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"];
   let label_output = "";
@@ -197,26 +250,3 @@ function labelprocess(outTensor){
   }
   labelDisplay.innerHTML = label_output;
 }
-
-// tracking the rxVolume and displaying it
-let previousBytesReceived = 0;
-
-setInterval(() => {
-    peerConnection.getStats(null).then(stats => {
-        stats.forEach(report => {
-            if (report.type === 'inbound-rtp' && report.kind === 'video') {
-                const currentBytesReceived = report.bytesReceived;
-
-                // Calculate the difference to get bytes received in the last interval
-                const bytesReceivedInInterval = currentBytesReceived - previousBytesReceived;
-                rxBytes.innerHTML = `${bytesReceivedInInterval} bytes/s`;
-
-                // Save the current value for the next comparison
-                previousBytesReceived = currentBytesReceived;
-            }
-        });
-    });
-}, 1000); // 1-second interval for monitoring
-
-// Start local streams automatically on page load
-startLocalStream_1();
