@@ -240,7 +240,9 @@ async function test(imageData) {
 }
 
 // Start local streams automatically on page load
-startLocalStream_1();
+playButton_1.addEventListener('click', () => { 
+  startLocalStream_1();
+});
 
 function labelprocess(outTensor){
   CIFAR10_CLASSES = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"];
