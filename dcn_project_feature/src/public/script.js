@@ -218,7 +218,7 @@ setInterval(() => {
               const messagesReceivedInInterval = currentMessagesReceived - previousMessagesReceived;
 
               rxBytes.innerHTML = `${bytesReceivedInInterval} bytes/s \n ${messagesReceivedInInterval} messages/s`;
-              
+
 
               // Save the current value for the next comparison 
               previousBytesReceived = currentBytesReceived;
@@ -229,4 +229,6 @@ setInterval(() => {
 }, 1000); // 1-second interval for monitoring
 
 // Start local streams automatically on page load
-startLocalStream_1();
+playButton_1.addEventListener('click', () => {
+  startLocalStream_1();
+});
