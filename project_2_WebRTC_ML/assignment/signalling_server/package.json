@@ -1,0 +1,15 @@
+{
+  "name": "signaling-server",
+  "version": "1.0.0",
+  "description": "A signaling server for WebRTC",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node src/test.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^4.1.3",
+    "socket.io-client": "^4.7.5"
+  }
+}
