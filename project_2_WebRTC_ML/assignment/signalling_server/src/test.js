@@ -1,7 +1,7 @@
 const io = require('socket.io-client');
 
 // TO DO: change the serverUrl to your signaling server's URL
-const serverUrl = 'http://localhost:62124';  // Replace with your signaling server's URL and port
+const serverUrl = 'http://change here:9999';
 const rooms = ['room1', 'room2', 'room3'];  // List of rooms to test
 const messages = ['Hello Room 1', 'Hello Room 2', 'Hello Room 3'];
 
