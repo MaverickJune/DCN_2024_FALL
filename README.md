@@ -9,3 +9,7 @@ Includes three socket applications:
 2. HTTP server (Includes GET, POST, HTTP Authentication)
 Please refer to the included "[Project 1] Socket Programming.pdf" for project details for the HTTP server and the torrent application.
 3. Distributed ML via WebRTC
+
+# Acknowledgement
+
+project 1 is originated from https://github.com/cakeng
