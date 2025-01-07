@@ -1,6 +1,8 @@
 # DCN 2024 Fall Programming Projects
 Programming projects created for SNU ECE 2024 Fall **Introduction to Data Communication Networks** 
 
+TAs : Wonjun Bang(me), Minjae Lee
+
 Includes three socket applications:
 
 1. Echo server (Tutorial Project)
