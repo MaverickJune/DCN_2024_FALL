@@ -12,4 +12,4 @@ Please refer to the included "[Project 1] Socket Programming.pdf" for project de
 
 # Acknowledgement
 
-project 1 is originated from https://github.com/cakeng
+project 1 is originated & primarily implemented from https://github.com/cakeng
